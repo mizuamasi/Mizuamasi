@@ -1,35 +1,34 @@
+const totalSlides = 6;
+
 function goToSlide(slideNumber) {
-    window.location.href = slideNumber === 1 ? 'index.html' : `slide${slideNumber}.html`;
+    if (slideNumber < 1 || slideNumber > totalSlides) return;
+    
+    const filename = slideNumber === 1 ? 'index.html' : `slide${slideNumber}.html`;
+    window.location.href = filename;
 }
 
-function goToNextSlide() {
-    const currentSlide = parseInt(document.body.dataset.slide);
-    const nextSlide = currentSlide + 1;
-    if (nextSlide <= 5) {
-        goToSlide(nextSlide);
-    } else {
-        goToSlide(1);
-    }
-}
-
-function goToPreviousSlide() {
-    const currentSlide = parseInt(document.body.dataset.slide);
-    const previousSlide = currentSlide - 1;
-    if (previousSlide >= 1) {
-        goToSlide(previousSlide);
-    } else {
-        goToSlide(5);
-    }
+function getCurrentSlide() {
+    return parseInt(document.body.getAttribute('data-slide'));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const nextButton = document.querySelector('.next-slide');
     const prevButton = document.querySelector('.prev-slide');
+    const nextButton = document.querySelector('.next-slide');
+    const currentSlide = getCurrentSlide();
 
-    if (nextButton) {
-        nextButton.addEventListener('click', goToNextSlide);
+    prevButton.addEventListener('click', () => {
+        goToSlide(currentSlide - 1);
+    });
+
+    nextButton.addEventListener('click', () => {
+        goToSlide(currentSlide + 1);
+    });
+
+    if (currentSlide === 1) {
+        prevButton.disabled = true;
     }
-    if (prevButton) {
-        prevButton.addEventListener('click', goToPreviousSlide);
+
+    if (currentSlide === totalSlides) {
+        nextButton.disabled = true;
     }
 });
