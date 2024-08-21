@@ -85,3 +85,33 @@ document.addEventListener('DOMContentLoaded', () => {
     playPauseButton.addEventListener('click', toggleSimulation);
     randomizeButton.addEventListener('click', randomizeCells);
 });
+
+function updateGridSize() {
+    const gridElement = document.getElementById('grid') || document.getElementById('customGrid');
+    if (!gridElement) return;
+    
+    const isMobile = window.innerWidth <= 600;
+    const size = isMobile ? 10 : 20;
+    
+    gridElement.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+    
+    // グリッドサイズが変更された場合、cellsの配列も更新
+    if (size !== gridSize) {
+        cells = Array(size).fill().map(() => Array(size).fill(false));
+        gridSize = size;
+        createGrid(); // グリッドを再作成
+        updateGrid(); // グリッドを更新
+    }
+}
+
+// ウィンドウサイズが変更された時にグリッドサイズを更新
+window.addEventListener('resize', updateGridSize);
+
+// 初期化時にもグリッドサイズを設定
+document.addEventListener('DOMContentLoaded', () => {
+    updateGridSize();
+    createGrid();
+    updateGrid();
+    
+    // ここに既存の初期化コード（ボタンのイベントリスナーの設定など）を追加
+});
