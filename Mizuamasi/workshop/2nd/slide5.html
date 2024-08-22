@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ルールを変えてみよう - ワークショップ</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-slide="5">
+    <div class="slide">
+        <div class="slide-content">
+            <h2>ルールを変えてみよう！</h2>
+            <p>セルオートマトンのルールを自由に変更できます。どんな模様ができるか試してみよう！</p>
+            <div class="grid-container">
+                <div id="customGrid" class="grid"></div>
+            </div>
+            <div class="controls">
+                <div>
+                    <button id="customPlayPause">再生</button>
+                    <button id="customRandomize">ランダム</button>
+                </div>
+                <div>世代: <span id="customGeneration">0</span></div>
+            </div>
+            <div class="rule-controls">
+                <div class="rule-control">
+                    <label for="surviveRule">生存ルール:</label>
+                    <input type="text" id="surviveRule" value="23" size="4">
+                </div>
+                <div class="rule-control">
+                    <label for="birthRule">誕生ルール:</label>
+                    <input type="text" id="birthRule" value="3" size="4">
+                </div>
+                <button id="applyRules">ルールを適用</button>
+            </div>
+            <p>
+                生存ルール: 生きたセルが生き続けるための隣接セル数<br>
+                誕生ルール: 死んだセルが生まれ変わるための隣接セル数<br>
+                例: 生存ルール "23", 誕生ルール "3" は、標準的なライフゲームのルールです。
+            </p>
+            <div class="navigation">
+                <button class="prev-slide">前へ</button>
+                <button class="next-slide">次へ</button>
+            </div>
+        </div>
+    </div>
+    <script src="navigation.js"></script>
+    <script src="customCellularAutomaton.js"></script>
+</body>
+</html>

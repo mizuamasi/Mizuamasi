@@ -3,33 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>セルオートマトンを体験しよう - ワークショップ</title>
+    <title>チューリングパターンの基本</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body data-slide="3">
     <div class="slide">
         <div class="slide-content">
-            <h2>セルオートマトンを体験しよう！</h2>
-            <p>下のグリッドでセルをクリックして、生きたセル（青）と死んだセル（白）を切り替えられるよ。
-               再生ボタンを押すと、セルが特別なルールに従って変化し始めるよ。
-               どんな模様ができるかな？</p>
-            <div class="grid-container">
-                <div id="grid" class="grid"></div>
-            </div>
-            <div class="controls">
-                <div>
-                    <button id="playPause">再生</button>
-                    <button id="randomize">ランダム</button>
-                </div>
-                <div>世代: <span id="generation">0</span></div>
+            <h2>チューリングパターンの基本</h2>
+            <p>チューリングパターンは、生物の模様を説明する重要な理論の一つです。</p>
+            <ul>
+                <li>2つの物質（活性因子と抑制因子）が互いに影響し合います</li>
+                <li>この相互作用が、複雑な模様を自然に作り出します</li>
+                <li>生物の体の中で、色素を作る物質と抑える物質が作用し合うことで模様ができます</li>
+            </ul>
+            <div class="image-container">
+                <img src="https://via.placeholder.com/400x200.png?text=チューリングパターンの例" alt="チューリングパターンの例">
+                <p>チューリングパターンで作られた模様の例</p>
             </div>
             <div class="navigation">
-                <button class="prev-slide">前へ</button>
-                <button class="next-slide">次へ</button>
+                <button class="prev-slide" onclick="goToSlide(2)">前へ</button>
+                <button class="next-slide" onclick="goToSlide(4)">次へ</button>
             </div>
         </div>
     </div>
     <script src="navigation.js"></script>
-    <script src="cellularAutomaton.js"></script>
 </body>
 </html>

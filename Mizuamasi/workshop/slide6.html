@@ -3,27 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>まとめ - ワークショップ</title>
+    <title>セルオートマトンを一歩ずつ観察しよう</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body data-slide="6">
     <div class="slide">
         <div class="slide-content">
-            <h2>まとめ：生物の模様のひみつ</h2>
-            <p>今日学んだことをおさらいしましょう：</p>
-            <ul>
-                <li>生物の模様は、単純なルールから複雑な形を作り出しています</li>
-                <li>セルオートマトンは、そのような単純なルールの一例です</li>
-                <li>コンピュータを使ってシミュレーションすることで、様々な模様を作れます</li>
-                <li>実際の生物でも、似たような仕組みで模様ができています</li>
-            </ul>
-            <p>これからは、身の回りの生き物の模様を見るたびに、どんなルールで作られているのか考えてみてくださいね！</p>
+            <h2>セルオートマトンを一歩ずつ観察しよう</h2>
+            <p>セルをクリックして初期状態を設定し、「次のステップ」ボタンを押して変化を観察しましょう。</p>
+            <div id="step-automaton" class="step-automaton"></div>
+            <div class="controls">
+                <button id="next-step">次のステップ</button>
+                <button id="reset">リセット</button>
+            </div>
+            <div id="cell-info" class="cell-info"></div>
             <div class="navigation">
-                <button class="prev-slide">前へ</button>
-                <button class="next-slide" disabled>次へ</button>
+                <button class="prev-slide" onclick="goToSlide(5)">前へ</button>
+                <button class="next-slide" onclick="goToSlide(7)">次へ</button>
             </div>
         </div>
     </div>
     <script src="navigation.js"></script>
+    <script src="stepAutomaton.js"></script>
 </body>
 </html>

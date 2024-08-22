@@ -1,4 +1,4 @@
-const totalSlides = 10;
+const totalSlides = 6;
 
 function goToSlide(slideNumber) {
     if (slideNumber < 1 || slideNumber > totalSlides) return;
@@ -16,23 +16,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextButton = document.querySelector('.next-slide');
     const currentSlide = getCurrentSlide();
 
-    if (prevButton) {
-        prevButton.addEventListener('click', () => {
-            goToSlide(currentSlide - 1);
-        });
-    }
+    prevButton.addEventListener('click', () => {
+        goToSlide(currentSlide - 1);
+    });
 
-    if (nextButton) {
-        nextButton.addEventListener('click', () => {
-            goToSlide(currentSlide + 1);
-        });
-    }
+    nextButton.addEventListener('click', () => {
+        goToSlide(currentSlide + 1);
+    });
 
     if (currentSlide === 1) {
-        if (prevButton) prevButton.style.display = 'none';
+        prevButton.disabled = true;
     }
 
     if (currentSlide === totalSlides) {
-        if (nextButton) nextButton.style.display = 'none';
+        nextButton.disabled = true;
     }
 });
