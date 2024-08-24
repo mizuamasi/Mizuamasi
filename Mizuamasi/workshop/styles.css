@@ -59,6 +59,7 @@ ul {
     height: auto;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    object-fit: contain;
 }
 
 .navigation {
@@ -93,12 +94,44 @@ button:disabled {
     transform: translateY(-2px);
 }
 
-.automaton-demo, .rule-demo, .step-automaton, .pattern-demo, .custom-automaton {
+.grid-container {
     width: 100%;
     max-width: 400px;
-    aspect-ratio: 1;
     margin: 20px auto;
-    border: 1px solid #ddd;
+    aspect-ratio: 1 / 1;
+}
+
+.grid {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(var(--grid-size, 8), 1fr);
+    grid-template-rows: repeat(var(--grid-size, 8), 1fr);
+    gap: 1px;
+    border: 1px solid #ccc;
+}
+
+.cell {
+    aspect-ratio: 1 / 1;
+    background-color: #fff;
+    border: 1px solid #eee;
+    transition: background-color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .grid-container {
+        max-width: 350px;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-container {
+        max-width: 300px;
+    }
+}
+
+.cell.alive {
+    background-color: #333;
 }
 
 .cell-info, .rule-explanation {
@@ -131,7 +164,7 @@ button:disabled {
     display: none;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .slide-content {
         width: 95%;
         padding: 20px;
@@ -141,86 +174,52 @@ button:disabled {
     h2 { font-size: 1.7em; }
     h3 { font-size: 1.3em; }
 
+    .grid-container {
+        max-width: 350px;
+    }
+
     .image-container, .quiz-container, .pattern-container, .example-container {
         flex-direction: column;
     }
 }
 
-/* 既存のスタイルはそのままで、以下を追加 */
-
-.grid {
-    display: grid;
-    width: 100%;
-    max-width: 400px;
-    aspect-ratio: 1;
-    margin: 20px auto;
-    border: 1px solid #ccc;
-}
-
-.cell {
-    border: 1px solid #eee;
-    background-color: #fff;
-    transition: background-color 0.3s;
-}
-
-.cell.alive {
-    background-color: #333;
-}
-
-.custom-controls, .simulation-controls {
-    margin: 20px 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-}
-
-.custom-controls input {
-    width: 100%;
-    max-width: 200px;
-}
-
-.custom-controls button, .simulation-controls button {
-    padding: 5px 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.custom-controls button:hover, .simulation-controls button:hover {
-    background-color: #0056b3;
-}
-
-#generation-count, #rule-explanation {
-    text-align: center;
-    margin: 10px 0;
-}
-
-@media (max-width: 600px) {
-    .grid {
+@media (max-width: 480px) {
+    .grid-container {
         max-width: 300px;
+    }
+
+    .custom-controls input,
+    .custom-controls button,
+    .controls button {
+        font-size: 14px;
+        padding: 8px 12px;
     }
 }
 
-/* 既存のスタイルに追加 */
+/* 既存のスタイルに追加または更新 */
 
-.rule-demo {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 2px;
-    width: 200px;
-    height: 200px;
+.rule-demo .grid-container {
+    width: 100%;
+    max-width: 250px; /* グリッド全体のサイズを小さく */
     margin: 20px auto;
+    aspect-ratio: 1 / 1;
+}
+
+.rule-demo .grid {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* 5x5のグリッドに固定 */
+    grid-template-rows: repeat(5, 1fr);
+    gap: 1px;
+    border: 1px solid #ccc;
 }
 
 .rule-demo .cell {
-    width: 100%;
-    height: 100%;
-    border: 1px solid #ccc;
+    aspect-ratio: 1 / 1;
     background-color: #fff;
-    transition: all 0.3s ease;
+    border: 1px solid #eee;
+    transition: background-color 0.3s ease;
 }
 
 .rule-demo .cell.alive {
@@ -231,97 +230,14 @@ button:disabled {
     border: 2px solid #f00;
 }
 
-.cell-explanation {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f0f0f0;
-    border-radius: 5px;
-}
-
-.controls {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.controls button {
-    padding: 5px 10px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.rule-demo .cell:hover {
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-    transform: scale(1.1);
-    z-index: 1;
-}
-
-.rule-demo .cell.current:hover {
-    box-shadow: 0 0 8px rgba(255, 0, 0, 0.7);
-}
-
-/* 既存のスタイルに追加 */
-
-.rule-demo {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 2px;
-    width: 100%;
-    max-width: 300px;
-    aspect-ratio: 1;
-    margin: 20px auto;
-}
-
-.rule-demo .cell {
-    width: 100%;
-    height: 100%;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    transition: all 0.3s ease;
-}
-
-/* タブレット向けスタイル */
 @media (max-width: 768px) {
-    .rule-demo {
-        max-width: 250px;
-    }
-
-    .cell-explanation {
-        font-size: 14px;
-    }
-
-    .controls button {
-        font-size: 14px;
-        padding: 8px 16px;
-    }
-}
-
-/* モバイル向けスタイル */
-@media (max-width: 480px) {
-    .rule-demo {
+    .rule-demo .grid-container {
         max-width: 200px;
     }
-
-    .cell-explanation {
-        font-size: 12px;
-    }
-
-    .controls button {
-        font-size: 12px;
-        padding: 6px 12px;
-    }
 }
 
-/* タッチデバイス向けのホバースタイル調整 */
-@media (hover: none) {
-    .rule-demo .cell:hover {
-        box-shadow: none;
-        transform: none;
-    }
-
-    .rule-demo .cell:active {
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-        transform: scale(1.1);
+@media (max-width: 480px) {
+    .rule-demo .grid-container {
+        max-width: 150px;
     }
 }

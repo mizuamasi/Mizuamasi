@@ -1,79 +1,95 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const container = document.getElementById('step-automaton');
+    const grid = document.getElementById('step-automaton');
+    const stepButton = document.getElementById('next-step');
+    const resetButton = document.getElementById('reset');
     const cellInfo = document.getElementById('cell-info');
-    container.appendChild(canvas);
 
-    const cellSize = 40;
-    const gridSize = 10;
-    canvas.width = canvas.height = cellSize * gridSize;
+    const gridSize = 8;
+    let cells = [];
 
-    let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
-
-    function drawGrid() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let x = 0; x < gridSize; x++) {
-            for (let y = 0; y < gridSize; y++) {
-                ctx.strokeStyle = 'gray';
-                ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                if (grid[x][y]) {
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                }
+    function createGrid() {
+        grid.innerHTML = '';
+        grid.style.setProperty('--grid-size', gridSize);
+        cells = [];
+        for (let i = 0; i < gridSize; i++) {
+            cells[i] = [];
+            for (let j = 0; j < gridSize; j++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.addEventListener('click', () => toggleCell(i, j));
+                cell.addEventListener('mouseover', () => showCellInfo(i, j));
+                cell.addEventListener('mouseout', () => cellInfo.innerHTML = '');
+                cell.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    toggleCell(i, j);
+                    showCellInfo(i, j);
+                });
+                grid.appendChild(cell);
+                cells[i][j] = false;
             }
         }
     }
 
-    function countNeighbors(x, y) {
+    function toggleCell(i, j) {
+        cells[i][j] = !cells[i][j];
+        updateGrid();
+        showCellInfo(i, j);
+    }
+
+    function updateGrid() {
+        const cellElements = grid.getElementsByClassName('cell');
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                cellElements[i * gridSize + j].classList.toggle('alive', cells[i][j]);
+            }
+        }
+    }
+
+    function showCellInfo(i, j) {
+        const isAlive = cells[i][j];
+        const neighbors = countNeighbors(i, j);
+        const willLive = neighbors === 3 || (isAlive && neighbors === 2);
+        let info = `セル(${i+1}, ${j+1}): 現在${isAlive ? '生' : '死'}, 隣接する生きたセル: ${neighbors}<br>`;
+        info += `次の世代: ${willLive ? '生存' : '死亡'} - `;
+        if (isAlive) {
+            info += willLive ? '周囲に2つか3つの生きたセルがあるため生存' : '周囲の生きたセルが少なすぎるか多すぎるため死亡';
+        } else {
+            info += willLive ? '周囲にちょうど3つの生きたセルがあるため誕生' : '周囲の生きたセルが3つではないため、死んだまま';
+        }
+        cellInfo.innerHTML = info;
+    }
+
+    function countNeighbors(i, j) {
         let count = 0;
-        for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-                if (i === 0 && j === 0) continue;
-                const newX = (x + i + gridSize) % gridSize;
-                const newY = (y + j + gridSize) % gridSize;
-                if (grid[newX][newY]) count++;
+        for (let di = -1; di <= 1; di++) {
+            for (let dj = -1; dj <= 1; dj++) {
+                if (di === 0 && dj === 0) continue;
+                const ni = (i + di + gridSize) % gridSize;
+                const nj = (j + dj + gridSize) % gridSize;
+                if (cells[ni][nj]) count++;
             }
         }
         return count;
     }
 
-    function updateGrid() {
-        const newGrid = grid.map(row => [...row]);
-        for (let x = 0; x < gridSize; x++) {
-            for (let y = 0; y < gridSize; y++) {
-                const neighbors = countNeighbors(x, y);
-                if (grid[x][y]) {
-                    newGrid[x][y] = neighbors === 2 || neighbors === 3;
-                } else {
-                    newGrid[x][y] = neighbors === 3;
-                }
+    function step() {
+        const newCells = cells.map(row => [...row]);
+        for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+                const neighbors = countNeighbors(i, j);
+                newCells[i][j] = neighbors === 3 || (cells[i][j] && neighbors === 2);
             }
         }
-        grid = newGrid;
-        drawGrid();
+        cells = newCells;
+        updateGrid();
     }
 
-    canvas.addEventListener('click', (event) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = Math.floor((event.clientX - rect.left) / cellSize);
-        const y = Math.floor((event.clientY - rect.top) / cellSize);
-        grid[x][y] = !grid[x][y];
-        drawGrid();
-        updateCellInfo(x, y);
+    createGrid();
+
+    stepButton.addEventListener('click', step);
+    resetButton.addEventListener('click', () => {
+        createGrid();
+        updateGrid();
+        cellInfo.innerHTML = '';
     });
-
-    function updateCellInfo(x, y) {
-        const neighbors = countNeighbors(x, y);
-        cellInfo.textContent = `セル (${x}, ${y}) - 状態: ${grid[x][y] ? '生' : '死'}, 隣接する生きたセル: ${neighbors}`;
-    }
-
-    document.getElementById('next-step').addEventListener('click', updateGrid);
-    document.getElementById('reset').addEventListener('click', () => {
-        grid = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
-        drawGrid();
-        cellInfo.textContent = '';
-    });
-
-    drawGrid();
 });

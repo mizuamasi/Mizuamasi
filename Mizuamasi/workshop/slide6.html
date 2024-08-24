@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>セルオートマトンを一歩ずつ観察しよう</title>
     <link rel="stylesheet" href="styles.css">
     <script src="navigation.js"></script>
@@ -18,17 +18,18 @@
                 <p>セルオートマトンは、簡単なルールに従って変化する格子状の世界です。各マス（セル）は「生きている」か「死んでいる」の状態を持ち、周囲のセルの状態に基づいて次の世代の状態が決まります。</p>
                 
                 <h3>ライフゲームのルール</h3>
-                <p>このページでは、「ライフゲーム」と呼ばれる有名なセルオートマトンのルールを使用しています：</p>
-                <ul>
-                    <li>生きているセルは、周囲に2個か3個の生きているセルがあれば生き続けます。</li>
-                    <li>死んでいるセルは、周囲にちょうど3個の生きているセルがあれば次の世代で生まれます。</li>
-                    <li>上記以外の場合、セルは死亡するか、死んだままとなります。</li>
-                </ul>
+                <ol>
+                    <li>生存：生きているセルは、周りに2つか3つの生きているセルがあれば、次の世代でも生き続けます。</li>
+                    <li>誕生：死んでいるセルは、周りにちょうど3つの生きているセルがあれば、次の世代で生まれます。</li>
+                    <li>死亡：上記以外の場合、セルは死亡するか、死んだままです。</li>
+                </ol>
             </div>
             
             <p>セルをクリックして初期状態を設定し、「次のステップ」ボタンを押して変化を観察しましょう。</p>
             
-            <div id="step-automaton" class="grid"></div>
+            <div class="grid-container">
+                <div id="step-automaton" class="grid"></div>
+            </div>
             
             <div class="controls">
                 <button id="next-step">次のステップ</button>
