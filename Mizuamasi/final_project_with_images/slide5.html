@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>セルオートマトンのルールを詳しく学ぼう</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-slide="5">
+    <div class="slide">
+        <div class="slide-content">
+            <h2>セルオートマトンのルールを詳しく学ぼう</h2>
+            <div class="rule-explanation">
+                <h3>セルの状態</h3>
+                <p>各セルには2つの状態があります：</p>
+                <ul>
+                    <li>生きている（黒）</li>
+                    <li>死んでいる（白）</li>
+                </ul>
+                <h3>ライフゲームの基本ルール</h3>
+                <p>1. 生存：生きているセルは、周りに2つか3つの生きているセルがあれば、次の世代でも生き続けます。</p>
+                <p>2. 誕生：死んでいるセルは、周りにちょうど3つの生きているセルがあれば、次の世代で生まれます。</p>
+                <p>3. 死亡：上記以外の場合、セルは死亡するか、死んだままです。</p>
+            </div>
+            <div id="rule-demo" class="rule-demo"></div>
+            <div class="navigation">
+                <button class="prev-slide" onclick="goToSlide(4)">前へ</button>
+                <button class="next-slide" onclick="goToSlide(6)">次へ</button>
+            </div>
+        </div>
+    </div>
+    <script src="navigation.js"></script>
+    <script src="ruleDemo.js"></script>
+</body>
+</html>

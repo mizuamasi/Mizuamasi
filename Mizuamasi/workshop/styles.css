@@ -83,6 +83,16 @@ button:hover {
     transform: translateY(-2px);
 }
 
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.navigation button:hover:not(:disabled) {
+    background-color: #0080c9;
+    transform: translateY(-2px);
+}
+
 .automaton-demo, .rule-demo, .step-automaton, .pattern-demo, .custom-automaton {
     width: 100%;
     max-width: 400px;
@@ -117,6 +127,10 @@ button:hover {
     margin-top: 30px;
 }
 
+.hidden {
+    display: none;
+}
+
 @media (max-width: 600px) {
     .slide-content {
         width: 95%;
@@ -129,5 +143,185 @@ button:hover {
 
     .image-container, .quiz-container, .pattern-container, .example-container {
         flex-direction: column;
+    }
+}
+
+/* 既存のスタイルはそのままで、以下を追加 */
+
+.grid {
+    display: grid;
+    width: 100%;
+    max-width: 400px;
+    aspect-ratio: 1;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+}
+
+.cell {
+    border: 1px solid #eee;
+    background-color: #fff;
+    transition: background-color 0.3s;
+}
+
+.cell.alive {
+    background-color: #333;
+}
+
+.custom-controls, .simulation-controls {
+    margin: 20px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.custom-controls input {
+    width: 100%;
+    max-width: 200px;
+}
+
+.custom-controls button, .simulation-controls button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.custom-controls button:hover, .simulation-controls button:hover {
+    background-color: #0056b3;
+}
+
+#generation-count, #rule-explanation {
+    text-align: center;
+    margin: 10px 0;
+}
+
+@media (max-width: 600px) {
+    .grid {
+        max-width: 300px;
+    }
+}
+
+/* 既存のスタイルに追加 */
+
+.rule-demo {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+    width: 200px;
+    height: 200px;
+    margin: 20px auto;
+}
+
+.rule-demo .cell {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+.rule-demo .cell.alive {
+    background-color: #333;
+}
+
+.rule-demo .cell.current {
+    border: 2px solid #f00;
+}
+
+.cell-explanation {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.controls button {
+    padding: 5px 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.rule-demo .cell:hover {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    transform: scale(1.1);
+    z-index: 1;
+}
+
+.rule-demo .cell.current:hover {
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.7);
+}
+
+/* 既存のスタイルに追加 */
+
+.rule-demo {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 1;
+    margin: 20px auto;
+}
+
+.rule-demo .cell {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+/* タブレット向けスタイル */
+@media (max-width: 768px) {
+    .rule-demo {
+        max-width: 250px;
+    }
+
+    .cell-explanation {
+        font-size: 14px;
+    }
+
+    .controls button {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}
+
+/* モバイル向けスタイル */
+@media (max-width: 480px) {
+    .rule-demo {
+        max-width: 200px;
+    }
+
+    .cell-explanation {
+        font-size: 12px;
+    }
+
+    .controls button {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+}
+
+/* タッチデバイス向けのホバースタイル調整 */
+@media (hover: none) {
+    .rule-demo .cell:hover {
+        box-shadow: none;
+        transform: none;
+    }
+
+    .rule-demo .cell:active {
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        transform: scale(1.1);
     }
 }

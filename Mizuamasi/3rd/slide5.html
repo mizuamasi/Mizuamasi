@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>セルオートマトンを体験しよう！</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(7, 30px);
+            gap: 2px;
+            margin: 20px auto;
+            width: fit-content;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .alive {
+            background-color: #000;
+        }
+        .focused {
+            box-shadow: 0 0 0 2px #00f;
+        }
+        .cell-example {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 1px solid #000;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .cell-example.alive {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body data-slide="5">
+    <div class="slide">
+        <div class="slide-content">
+            <h2>セルオートマトンを体験しよう！</h2>
+            
+            <div class="cell-explanation">
+                <p>
+                    <span class="cell-example"></span>白いセル：死んだセル
+                    <span class="cell-example alive"></span>黒いセル：生きたセル
+                </p>
+            </div>
+            
+            <select id="ruleSelect">
+                <option value="conway">ライフゲーム（標準ルール）</option>
+                <option value="highlife">ハイライフ（拡張ルール）</option>
+                <option value="daynight">デイ＆ナイト（複雑なルール）</option>
+            </select>
+            
+            <div id="ruleExplanation" class="rule-explanation"></div>
+            <div id="grid" class="grid"></div>
+            <div id="explanation" class="explanation"></div>
+            <button id="nextButton">次のステップ</button>
+            <button id="resetButton">リセット</button>
+            
+            <div class="navigation">
+                <button class="prev-slide">前へ</button>
+                <button class="next-slide">次へ</button>
+            </div>
+        </div>
+    </div>
+    <script src="navigation.js"></script>
+    <script>
+        const grid = document.getElementById('grid');
+        const explanation = document.getElementById('explanation');
+        const ruleExplanation = document.getElementById('ruleExplanation');
+        const nextButton = document.getElementById('nextButton');
+        const resetButton = document.getElementById('resetButton');
+        const ruleSelect = document.getElementById('ruleSelect');
+
+        let currentStep = 0;
+        let currentRule = 'conway';
+        let focusedCell = null;
+
+        const rules = {
+            conway: {
+                name: "ライフゲーム（標準ルール）",
+                description: "このルールでは：\n・生きたセル（黒）は、周囲に2つか3つの生きたセルがある場合のみ生き残ります。\n・死んだセル（白）は、周囲にちょうど3つの生きたセルがある場合に誕生します。",
+                survive: [2, 3],
+                birth: [3],
+                steps: [
+                    { cells: [0,0,0,0,0,0,0, 0,0,1,1,1,0,0, 0,0,0,0,0,0,0], text: "初期状態：中央の3つのセルが生きている状態（黒）です。", focus: null },
+                    { cells: [0,0,0,0,0,0,0, 0,0,1,1,1,0,0, 0,0,0,0,0,0,0], text: "左のセル（白）を見てみましょう。周囲に2つの生きたセル（黒）があります。", focus: 9 },
+                    { cells: [0,0,0,0,0,0,0, 0,0,1,1,1,0,0, 0,0,1,0,0,0,0], text: "3つの隣接する生きたセル（黒）があるので、このセルは次の世代で生きた状態（黒）になります。", focus: 9 },
+                    { cells: [0,0,0,0,0,0,0, 0,0,1,1,1,0,0, 0,0,1,0,0,0,0], text: "中央のセル（黒）を見てみましょう。周囲に2つの生きたセル（黒）があります。", focus: 10 },
+                    { cells: [0,0,0,0,0,0,0, 0,0,1,1,1,0,0, 0,0,1,1,0,0,0], text: "2つの隣接する生きたセル（黒）があるので、このセルも次の世代で生きた状態（黒）を維持します。", focus: 10 },
+                    { cells: [0,0,0,0,0,0,0, 0,0,1,1,1,0,0, 0,0,1,1,1,0,0], text: "同様に、右のセルも生きた状態（黒）になります。これが次の世代の状態です。", focus: null },
+                ]
+            },
+            highlife: {
+                name: "ハイライフ（拡張ルール）",
+                description: "このルールは標準的なライフゲームを少し変更したものです：\n・生きたセル（黒）は、周囲に2つか3つの生きたセルがある場合に生き残ります（標準ルールと同じ）。\n・死んだセル（白）は、周囲に3つか6つの生きたセルがある場合に誕生します（6つの場合が追加）。",
+                survive: [2, 3],
+                birth: [3, 6],
+                steps: [
+                    { cells: [0,0,0,0,0,0,0, 0,1,1,1,1,1,0, 0,0,0,0,0,0,0], text: "初期状態：中央の5つのセルが生きている状態（黒）です。", focus: null },
+                    { cells: [0,0,0,0,0,0,0, 0,1,1,1,1,1,0, 0,0,0,0,0,0,0], text: "左端のセル（黒）を見てみましょう。周囲に2つの生きたセル（黒）があります。", focus: 8 },
+                    { cells: [0,0,0,0,0,0,0, 0,1,1,1,1,1,0, 1,0,0,0,0,0,0], text: "2つの隣接する生きたセル（黒）があるので、このセルは次の世代で生きた状態（黒）を維持します。", focus: 8 },
+                    { cells: [0,0,0,0,0,0,0, 0,1,1,1,1,1,0, 1,0,0,0,0,0,0], text: "下の中央のセル（白）を見てみましょう。周囲に3つの生きたセル（黒）があります。", focus: 15 },
+                    { cells: [0,0,0,0,0,0,0, 0,1,1,1,1,1,0, 1,1,1,0,0,0,0], text: "3つの隣接する生きたセル（黒）があるので、このセルは次の世代で生きた状態（黒）になります。", focus: 15 },
+                    { cells: [0,0,1,1,1,0,0, 0,1,0,0,0,1,0, 0,1,1,1,0,0,0], text: "これが次の世代の状態です。ハイライフルールでは、6つの隣接セルがある場合も新しいセル（黒）が誕生します。", focus: null },
+                ]
+            },
+            daynight: {
+                name: "デイ＆ナイト（複雑なルール）",
+                description: "このルールは標準的なライフゲームとはかなり異なります：\n・生きたセル（黒）は、周囲に3, 4, 6, 7, 8個の生きたセルがある場合に生き残ります。\n・死んだセル（白）は、周囲に3, 6, 7, 8個の生きたセルがある場合に誕生します。\nこのルールは「対称的」で、生きたセル（黒）と死んだセル（白）の割合が約50%になる傾向があります。",
+                survive: [3, 4, 6, 7, 8],
+                birth: [3, 6, 7, 8],
+                steps: [
+                    { cells: [1,1,1,0,1,1,1, 1,0,0,0,0,0,1, 1,1,1,0,1,1,1], text: "初期状態：デイ＆ナイトルールでは、多くのセルが生きている状態（黒）から始めます。", focus: null },
+                    { cells: [1,1,1,0,1,1,1, 1,0,0,0,0,0,1, 1,1,1,0,1,1,1], text: "中央のセル（白）を見てみましょう。周囲に6つの生きたセル（黒）があります。", focus: 10 },
+                    { cells: [1,1,1,0,1,1,1, 1,0,0,1,0,0,1, 1,1,1,0,1,1,1], text: "6つの隣接する生きたセル（黒）があるので、このセルは次の世代で生きた状態（黒）になります。", focus: 10 },
+                    { cells: [1,1,1,0,1,1,1, 1,0,0,1,0,0,1, 1,1,1,0,1,1,1], text: "上の中央のセル（白）を見てみましょう。周囲に5つの生きたセル（黒）があります。", focus: 3 },
+                    { cells: [1,1,1,1,1,1,1, 1,0,0,1,0,0,1, 1,1,1,0,1,1,1], text: "5つの隣接する生きたセル（黒）があるので、このセルは次の世代で死んだ状態（白）になります。", focus: 3 },
+                    { cells: [1,0,0,1,0,0,1, 0,0,1,1,1,0,0, 1,0,0,1,0,0,1], text: "これが次の世代の状態です。デイ＆ナイトルールでは、生存と誕生の条件が通常のライフゲームとは大きく異なります。", focus: null },
+                ]
+            }
+        };
+
+        function createGrid() {
+            grid.innerHTML = '';
+            for (let i = 0; i < 21; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                grid.appendChild(cell);
+            }
+        }
+
+        function updateGrid() {
+            const cells = grid.getElementsByClassName('cell');
+            const currentStepData = rules[currentRule].steps[currentStep];
+            for (let i = 0; i < 21; i++) {
+                cells[i].classList.toggle('alive', currentStepData.cells[i] === 1);
+                cells[i].classList.toggle('focused', i === currentStepData.focus);
+            }
+            explanation.textContent = currentStepData.text;
+            focusedCell = currentStepData.focus;
+        }
+
+        function nextStep() {
+            currentStep = (currentStep + 1) % rules[currentRule].steps.length;
+            updateGrid();
+        }
+
+        function resetAnimation() {
+            currentStep = 0;
+            updateGrid();
+        }
+
+        function changeRule() {
+            currentRule = ruleSelect.value;
+            ruleExplanation.textContent = rules[currentRule].description;
+            resetAnimation();
+        }
+
+        createGrid();
+        changeRule(); // 初期ルールの説明を表示
+        updateGrid();
+        nextButton.addEventListener('click', nextStep);
+        resetButton.addEventListener('click', resetAnimation);
+        ruleSelect.addEventListener('change', changeRule);
+    </script>
+</body>
+</html>

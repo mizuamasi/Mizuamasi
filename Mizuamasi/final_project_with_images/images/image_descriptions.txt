@@ -1,0 +1,3 @@
+turing_pattern_example.png: An example of a pattern generated using Turing's theory.
+animal_pattern_1.png: A pattern resembling animal skin, similar to a leopard.
+shell_pattern.png: A shell pattern commonly found in nature, demonstrating Turing's model.

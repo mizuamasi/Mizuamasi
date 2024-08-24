@@ -1,68 +1,98 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const container = document.getElementById('rule-demo');
-    container.appendChild(canvas);
+    const demoContainer = document.getElementById('rule-demo');
+    const nextCellButton = document.getElementById('next-cell');
+    const resetButton = document.getElementById('reset');
+    const cellExplanation = document.getElementById('cell-explanation');
 
-    const cellSize = 30;
-    const gridSize = 3;
-    canvas.width = canvas.height = cellSize * gridSize;
+    const gridSize = 5;
+    let grid = [];
+    let currentCell = { x: 0, y: 0 };
 
-    let grid = [
-        [false, true, false],
-        [false, true, false],
-        [false, true, false]
-    ];
+    function createGrid() {
+        demoContainer.innerHTML = '';
+        grid = [];
+        for (let y = 0; y < gridSize; y++) {
+            const row = [];
+            for (let x = 0; x < gridSize; x++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.x = x;
+                cell.dataset.y = y;
+                cell.addEventListener('click', () => toggleCell(x, y));
+                cell.addEventListener('mouseover', () => updateExplanation(x, y));
+                cell.addEventListener('mouseout', () => updateExplanation(currentCell.x, currentCell.y));
+                cell.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    toggleCell(x, y);
+                    updateExplanation(x, y);
+                });
+                demoContainer.appendChild(cell);
+                row.push(false);
+            }
+            grid.push(row);
+        }
+        currentCell = { x: 0, y: 0 };
+        updateGrid();
+        updateExplanation(currentCell.x, currentCell.y);
+    }
 
-    function drawGrid() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let x = 0; x < gridSize; x++) {
-            for (let y = 0; y < gridSize; y++) {
-                ctx.strokeStyle = 'gray';
-                ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                if (grid[x][y]) {
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                }
+
+    function toggleCell(x, y) {
+        grid[y][x] = !grid[y][x];
+        updateGrid();
+        updateExplanation(currentCell.x, currentCell.y);
+    }
+
+    function updateGrid() {
+        const cells = demoContainer.getElementsByClassName('cell');
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                const cell = cells[y * gridSize + x];
+                cell.classList.toggle('alive', grid[y][x]);
+                cell.classList.toggle('current', x === currentCell.x && y === currentCell.y);
             }
         }
     }
 
     function countNeighbors(x, y) {
         let count = 0;
-        for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-                if (i === 0 && j === 0) continue;
-                const newX = (x + i + gridSize) % gridSize;
-                const newY = (y + j + gridSize) % gridSize;
-                if (grid[newX][newY]) count++;
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const nx = (x + dx + gridSize) % gridSize;
+                const ny = (y + dy + gridSize) % gridSize;
+                if (grid[ny][nx]) count++;
             }
         }
         return count;
     }
 
-    function updateGrid() {
-        const newGrid = grid.map(row => [...row]);
-        for (let x = 0; x < gridSize; x++) {
-            for (let y = 0; y < gridSize; y++) {
-                const neighbors = countNeighbors(x, y);
-                if (grid[x][y]) {
-                    newGrid[x][y] = neighbors === 2 || neighbors === 3;
-                } else {
-                    newGrid[x][y] = neighbors === 3;
-                }
-            }
+    function updateExplanation(x, y) {
+        const isAlive = grid[y][x];
+        const neighbors = countNeighbors(x, y);
+        const willLive = isAlive ? (neighbors === 2 || neighbors === 3) : (neighbors === 3);
+
+        let explanation = `セル(${x + 1}, ${y + 1})は現在${isAlive ? '生きて' : '死んで'}います。<br>`;
+        explanation += `周囲の生きているセルの数: ${neighbors}<br>`;
+        explanation += `次の世代では${willLive ? '生きます' : '死にます'}。<br>`;
+        explanation += isAlive
+            ? (willLive ? '周囲に2つか3つの生きたセルがあるため生存します。' : '周囲の生きたセルが少なすぎるか多すぎるため死亡します。')
+            : (willLive ? '周囲にちょうど3つの生きたセルがあるため誕生します。' : '周囲の生きたセルが3つではないため、死んだままです。');
+
+        cellExplanation.innerHTML = explanation;
+    }
+
+    function nextCell() {
+        currentCell.x = (currentCell.x + 1) % gridSize;
+        if (currentCell.x === 0) {
+            currentCell.y = (currentCell.y + 1) % gridSize;
         }
-        grid = newGrid;
+        updateGrid();
+        updateExplanation(currentCell.x, currentCell.y);
     }
 
-    function animate() {
-        drawGrid();
-        setTimeout(() => {
-            updateGrid();
-            requestAnimationFrame(animate);
-        }, 1000);
-    }
+    createGrid();
 
-    animate();
+    nextCellButton.addEventListener('click', nextCell);
+    resetButton.addEventListener('click', createGrid);
 });

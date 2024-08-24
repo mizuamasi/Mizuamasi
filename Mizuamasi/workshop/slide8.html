@@ -4,14 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>セルオートマトンをカスタマイズしよう</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="navigation.js"></script>
+    <script src="customCellularAutomaton.js"></script>
 </head>
-<body data-slide="8">
+<body>
     <div class="slide">
         <div class="slide-content">
             <h2>セルオートマトンをカスタマイズしよう</h2>
-            <p>ルールを変更して、どのような模様ができるか試してみましょう。</p>
+            
+            <div class="explanation">
+                <h3>セルオートマトンとは？</h3>
+                <p>セルオートマトンは、簡単なルールに従って変化する格子状の世界です。各マス（セル）は「生きている」か「死んでいる」の状態を持ち、周囲のセルの状態に基づいて次の世代の状態が決まります。</p>
+                
+                <h3>ルールの説明</h3>
+                <p><strong>生存ルール：</strong>生きているセルが生き続けるために必要な、周囲の生きているセルの数です。</p>
+                <p><strong>誕生ルール：</strong>死んでいるセルが生まれるために必要な、周囲の生きているセルの数です。</p>
+                <p>例：生存ルール[2,3]、誕生ルール[3]の場合</p>
+                <ul>
+                    <li>生きているセルは、周囲に2個か3個の生きているセルがあれば生き続けます。</li>
+                    <li>死んでいるセルは、周囲にちょうど3個の生きているセルがあれば次の世代で生まれます。</li>
+                </ul>
+            </div>
+            
             <div class="custom-controls">
                 <label for="survive-rule">生存ルール（カンマ区切り）:</label>
                 <input type="text" id="survive-rule" value="2,3">
@@ -19,15 +34,24 @@
                 <input type="text" id="birth-rule" value="3">
                 <button id="apply-rules">ルールを適用</button>
             </div>
-            <div id="custom-automaton" class="custom-automaton"></div>
+            
+            <div id="custom-grid" class="grid"></div>
+            
+            <div class="simulation-controls">
+                <button id="step">1ステップ進める</button>
+                <button id="play-pause">再生/一時停止</button>
+                <button id="reset">リセット</button>
+            </div>
+            
+            <div id="generation-count">世代: 0</div>
+            
             <div id="rule-explanation" class="rule-explanation"></div>
+            
             <div class="navigation">
-                <button class="prev-slide" onclick="goToSlide(7)">前へ</button>
-                <button class="next-slide" onclick="goToSlide(9)">次へ</button>
+                <button class="prev-slide">前へ</button>
+                <button class="next-slide">次へ</button>
             </div>
         </div>
     </div>
-    <script src="navigation.js"></script>
-    <script src="customAutomaton.js"></script>
 </body>
 </html>

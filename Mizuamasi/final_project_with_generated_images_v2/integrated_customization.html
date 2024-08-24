@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ルールをカスタムしてみよう & セルオートマトンの詳細</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-slide="custom">
+    <div class="slide">
+        <div class="slide-content">
+            <h2>ルールをカスタムしてみよう & セルオートマトンの詳細</h2>
+            <p>このページでは、セルオートマトンの基本ルールを確認し、ルールをカスタムしてその効果を観察できます。また、チューリングパターンとの接続も説明します。</p>
+            <div class="image-container">
+                <img src="images/automaton_customization.png" alt="Automaton Customization Example">
+                <p>セルオートマトンのルールをカスタムしてみましょう。</p>
+            </div>
+            <h3>チューリングパターンとセルオートマトンの接続</h3>
+            <p>チューリングパターンとセルオートマトンのルールは、どちらもシンプルなルールから複雑な模様が生まれるという点で共通しています。以下はその接続の例です。</p>
+            <div class="image-container">
+                <img src="images/turing_pattern_connection.png" alt="Turing Pattern and Automaton Connection">
+                <p>チューリングパターンとセルオートマトンの関連性</p>
+            </div>
+            <h3>ルールをカスタムしてみよう</h3>
+            <div class="custom-controls">
+                <label for="survive-rule">生存ルール（カンマ区切り）:</label>
+                <input type="text" id="survive-rule" value="2,3">
+                <label for="birth-rule">誕生ルール（カンマ区切り）:</label>
+                <input type="text" id="birth-rule" value="3">
+                <button id="apply-rules">ルールを適用</button>
+            </div>
+            <div id="custom-automaton" class="custom-automaton"></div>
+            <div class="navigation">
+                <button class="prev-slide" onclick="goToSlide('previous')">前へ</button>
+                <button class="next-slide" onclick="goToSlide('next')">次へ</button>
+            </div>
+        </div>
+    </div>
+    <script src="navigation.js"></script>
+    <script src="customAutomaton.js"></script>
+</body>
+</html>

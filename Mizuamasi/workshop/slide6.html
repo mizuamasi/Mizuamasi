@@ -4,27 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>セルオートマトンを一歩ずつ観察しよう</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="navigation.js"></script>
+    <script src="stepAutomaton.js"></script>
 </head>
-<body data-slide="6">
+<body>
     <div class="slide">
         <div class="slide-content">
             <h2>セルオートマトンを一歩ずつ観察しよう</h2>
+            
+            <div class="explanation">
+                <h3>セルオートマトンとは？</h3>
+                <p>セルオートマトンは、簡単なルールに従って変化する格子状の世界です。各マス（セル）は「生きている」か「死んでいる」の状態を持ち、周囲のセルの状態に基づいて次の世代の状態が決まります。</p>
+                
+                <h3>ライフゲームのルール</h3>
+                <p>このページでは、「ライフゲーム」と呼ばれる有名なセルオートマトンのルールを使用しています：</p>
+                <ul>
+                    <li>生きているセルは、周囲に2個か3個の生きているセルがあれば生き続けます。</li>
+                    <li>死んでいるセルは、周囲にちょうど3個の生きているセルがあれば次の世代で生まれます。</li>
+                    <li>上記以外の場合、セルは死亡するか、死んだままとなります。</li>
+                </ul>
+            </div>
+            
             <p>セルをクリックして初期状態を設定し、「次のステップ」ボタンを押して変化を観察しましょう。</p>
-            <div id="step-automaton" class="step-automaton"></div>
+            
+            <div id="step-automaton" class="grid"></div>
+            
             <div class="controls">
                 <button id="next-step">次のステップ</button>
                 <button id="reset">リセット</button>
             </div>
+            
             <div id="cell-info" class="cell-info"></div>
+            
             <div class="navigation">
-                <button class="prev-slide" onclick="goToSlide(5)">前へ</button>
-                <button class="next-slide" onclick="goToSlide(7)">次へ</button>
+                <button class="prev-slide">前へ</button>
+                <button class="next-slide">次へ</button>
             </div>
         </div>
     </div>
-    <script src="navigation.js"></script>
-    <script src="stepAutomaton.js"></script>
 </body>
 </html>

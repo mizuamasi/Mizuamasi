@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>さまざまなセルオートマトンのパターン</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-slide="7">
+    <div class="slide">
+        <div class="slide-content">
+            <h2>さまざまなセルオートマトンのパターン</h2>
+            <p>セルオートマトンには、様々な面白いパターンがあります。代表的なものをいくつか見てみましょう。</p>
+            <div class="pattern-container">
+                <div class="pattern">
+                    <h3>グライダー</h3>
+                    <div id="glider" class="pattern-demo"></div>
+                    <p>対角線方向に進んでいくパターンです。</p>
+                </div>
+                <div class="pattern">
+                    <h3>ブリンカー</h3>
+                    <div id="blinker" class="pattern-demo"></div>
+                    <p>2つの状態を行き来する単純なパターンです。</p>
+                </div>
+                <div class="pattern">
+                    <h3>ビーコン</h3>
+                    <div id="beacon" class="pattern-demo"></div>
+                    <p>4つのセルが点滅するパターンです。</p>
+                </div>
+            </div>
+            <div class="navigation">
+                <button class="prev-slide" onclick="goToSlide(6)">前へ</button>
+                <button class="next-slide" onclick="goToSlide(8)">次へ</button>
+            </div>
+        </div>
+    </div>
+    <script src="navigation.js"></script>
+    <script src="patternDemo.js"></script>
+</body>
+</html>

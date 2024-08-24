@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initialize patterns
-    createAutomaton('glider', [[1,0], [2,1], [0,2], [1,2], [2,2]]);
-    createAutomaton('blinker', [[1,0], [1,1], [1,2]]);
-    createAutomaton('beacon', [[0,0], [1,0], [0,1], [3,2], [2,3], [3,3]]);
+    createAutomaton('glider', [[1, 0], [2, 1], [0, 2], [1, 2], [2, 2]]);
+    createAutomaton('blinker', [[1, 0], [1, 1], [1, 2]]);
+    createAutomaton('beacon', [[0, 0], [1, 0], [0, 1], [3, 2], [2, 3], [3, 3]]);
 });

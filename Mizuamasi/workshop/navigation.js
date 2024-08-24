@@ -1,38 +1,49 @@
-const totalSlides = 10;
+let currentSlide = 1;
+const totalSlides = 10; // スライドの総数を設定
 
 function goToSlide(slideNumber) {
-    if (slideNumber < 1 || slideNumber > totalSlides) return;
+    // スライド番号が範囲内にあることを確認
+    slideNumber = Math.max(1, Math.min(slideNumber, totalSlides));
     
-    const filename = slideNumber === 1 ? 'index.html' : `slide${slideNumber}.html`;
-    window.location.href = filename;
+    if (slideNumber !== currentSlide) {
+        // 新しいスライドのHTMLファイルに遷移
+        window.location.href = `slide${slideNumber}.html`;
+    }
 }
 
-function getCurrentSlide() {
-    return parseInt(document.body.getAttribute('data-slide'));
+function updateNavigationButtons() {
+    const prevButtons = document.querySelectorAll('.prev-slide');
+    const nextButtons = document.querySelectorAll('.next-slide');
+    
+    prevButtons.forEach(button => {
+        button.disabled = currentSlide === 1;
+    });
+    
+    nextButtons.forEach(button => {
+        button.disabled = currentSlide === totalSlides;
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const prevButton = document.querySelector('.prev-slide');
-    const nextButton = document.querySelector('.next-slide');
-    const currentSlide = getCurrentSlide();
-
-    if (prevButton) {
-        prevButton.addEventListener('click', () => {
-            goToSlide(currentSlide - 1);
-        });
+    // 現在のスライド番号を取得（URLから）
+    const match = window.location.pathname.match(/slide(\d+)\.html/);
+    if (match) {
+        currentSlide = parseInt(match[1]);
     }
 
-    if (nextButton) {
-        nextButton.addEventListener('click', () => {
+    updateNavigationButtons();
+
+    // 次のスライドに進むボタンの設定
+    document.querySelectorAll('.next-slide').forEach(button => {
+        button.addEventListener('click', () => {
             goToSlide(currentSlide + 1);
         });
-    }
+    });
 
-    if (currentSlide === 1) {
-        if (prevButton) prevButton.style.display = 'none';
-    }
-
-    if (currentSlide === totalSlides) {
-        if (nextButton) nextButton.style.display = 'none';
-    }
+    // 前のスライドに戻るボタンの設定
+    document.querySelectorAll('.prev-slide').forEach(button => {
+        button.addEventListener('click', () => {
+            goToSlide(currentSlide - 1);
+        });
+    });
 });

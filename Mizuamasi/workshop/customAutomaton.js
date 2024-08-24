@@ -1,83 +1,111 @@
+const customGridSize = 20;
+let customCells = Array(customGridSize).fill().map(() => Array(customGridSize).fill(false));
+let customIsRunning = false;
+let customGeneration = 0;
+let customIntervalId;
+let surviveRule = [2, 3];
+let birthRule = [3];
+
+let customGridElement, customPlayPauseButton, customRandomizeButton, customGenerationElement, surviveRuleInput, birthRuleInput, applyRulesButton;
+
+function initializeElements() {
+    customGridElement = document.getElementById('customGrid');
+    customPlayPauseButton = document.getElementById('customPlayPause');
+    customRandomizeButton = document.getElementById('customRandomize');
+    customGenerationElement = document.getElementById('customGeneration');
+    surviveRuleInput = document.getElementById('surviveRule');
+    birthRuleInput = document.getElementById('birthRule');
+    applyRulesButton = document.getElementById('applyRules');
+}
+
+function createCustomGrid() {
+    if (!customGridElement) return;
+    customGridElement.innerHTML = '';
+    for (let i = 0; i < customGridSize; i++) {
+        for (let j = 0; j < customGridSize; j++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.addEventListener('click', () => toggleCustomCell(i, j));
+            customGridElement.appendChild(cell);
+        }
+    }
+}
+
+function updateCustomGrid() {
+    if (!customGridElement) return;
+    const cellElements = customGridElement.getElementsByClassName('cell');
+    for (let i = 0; i < customGridSize; i++) {
+        for (let j = 0; j < customGridSize; j++) {
+            cellElements[i * customGridSize + j].classList.toggle('alive', customCells[i][j]);
+        }
+    }
+}
+
+function toggleCustomCell(i, j) {
+    customCells[i][j] = !customCells[i][j];
+    updateCustomGrid();
+}
+
+function randomizeCustomCells() {
+    customCells = customCells.map(row => row.map(() => Math.random() > 0.7));
+    updateCustomGrid();
+    customGeneration = 0;
+    if (customGenerationElement) customGenerationElement.textContent = customGeneration;
+}
+
+function countCustomNeighbors(row, col) {
+    let count = 0;
+    for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+            if (i === 0 && j === 0) continue;
+            const newRow = (row + i + customGridSize) % customGridSize;
+            const newCol = (col + j + customGridSize) % customGridSize;
+            if (customCells[newRow][newCol]) count++;
+        }
+    }
+    return count;
+}
+
+function nextCustomGeneration() {
+    const newCells = customCells.map((row, i) =>
+        row.map((cell, j) => {
+            const neighbors = countCustomNeighbors(i, j);
+            if (cell) {
+                return surviveRule.includes(neighbors);
+            } else {
+                return birthRule.includes(neighbors);
+            }
+        })
+    );
+    customCells = newCells;
+    updateCustomGrid();
+    customGeneration++;
+    if (customGenerationElement) customGenerationElement.textContent = customGeneration;
+}
+
+function toggleCustomSimulation() {
+    customIsRunning = !customIsRunning;
+    if (customPlayPauseButton) customPlayPauseButton.textContent = customIsRunning ? '一時停止' : '再生';
+    if (customIsRunning) {
+        customIntervalId = setInterval(nextCustomGeneration, 200);
+    } else {
+        clearInterval(customIntervalId);
+    }
+}
+
+function applyCustomRules() {
+    if (surviveRuleInput && birthRuleInput) {
+        surviveRule = surviveRuleInput.value.split(',').map(Number);
+        birthRule = birthRuleInput.value.split(',').map(Number);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const container = document.getElementById('custom-automaton');
-    container.appendChild(canvas);
+    initializeElements();
+    createCustomGrid();
+    updateCustomGrid();
 
-    const cellSize = 10;
-    const gridSize = 40;
-    canvas.width = canvas.height = cellSize * gridSize;
-
-    let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
-    let surviveRule = [2, 3];
-    let birthRule = [3];
-
-    function drawGrid() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let x = 0; x < gridSize; x++) {
-            for (let y = 0; y < gridSize; y++) {
-                if (grid[x][y]) {
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                }
-            }
-        }
-    }
-
-    function countNeighbors(x, y) {
-        let count = 0;
-        for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-                if (i === 0 && j === 0) continue;
-                const newX = (x + i + gridSize) % gridSize;
-                const newY = (y + j + gridSize) % gridSize;
-                if (grid[newX][newY]) count++;
-            }
-        }
-        return count;
-    }
-
-    function updateGrid() {
-        const newGrid = grid.map(row => [...row]);
-        for (let x = 0; x < gridSize; x++) {
-            for (let y = 0; y < gridSize; y++) {
-                const neighbors = countNeighbors(x, y);
-                if (grid[x][y]) {
-                    if (grid[x][y]) {
-                        newGrid[x][y] = surviveRule.includes(neighbors);
-                    } else {
-                        newGrid[x][y] = birthRule.includes(neighbors);
-                    }
-                }
-            }
-            grid = newGrid;
-        }
-    
-        function randomizeGrid() {
-            grid = grid.map(row => row.map(() => Math.random() < 0.3));
-        }
-    
-        function animate() {
-            updateGrid();
-            drawGrid();
-            requestAnimationFrame(animate);
-        }
-    
-        function applyRules() {
-            const surviveInput = document.getElementById('survive-rule');
-            const birthInput = document.getElementById('birth-rule');
-            surviveRule = surviveInput.value.split(',').map(Number);
-            birthRule = birthInput.value.split(',').map(Number);
-            
-            const ruleExplanation = document.getElementById('rule-explanation');
-            ruleExplanation.textContent = `現在のルール: 生存 ${surviveRule.join(',')} / 誕生 ${birthRule.join(',')}`;
-            
-            randomizeGrid();
-        }
-    
-        document.getElementById('apply-rules').addEventListener('click', applyRules);
-    
-        // 初期設定
-        applyRules();
-        animate();
-    });
+    if (customPlayPauseButton) customPlayPauseButton.addEventListener('click', toggleCustomSimulation);
+    if (customRandomizeButton) customRandomizeButton.addEventListener('click', randomizeCustomCells);
+    if (applyRulesButton) applyRulesButton.addEventListener('click', applyCustomRules);
+});
