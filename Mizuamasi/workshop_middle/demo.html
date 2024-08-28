@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フラグメントシェーダー概念デモ</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>フラグメントシェーダー概念デモ</h1>
+        <div class="canvas-container">
+            <canvas id="shaderCanvas"></canvas>
+            <div id="coordDisplay"></div>
+        </div>
+        <div class="controls">
+            <button onclick="setMode('uv')">UV座標表示</button>
+            <button onclick="setMode('gradient')">グラデーション</button>
+            <button onclick="setMode('circles')">同心円</button>
+            <button onclick="setMode('stripes')">ストライプ</button>
+            <button onclick="setMode('checkerboard')">チェッカーボード</button>
+        </div>
+        <div class="param-controls" id="paramControls"></div>
+        <div class="diagram" id="diagram"></div>
+        <div class="explanation" id="explanation"></div>
+    </div>
+    <script src="shader-demo.js"></script>
+</body>
+</html>
