@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ウェブベースのシェーダーエディター</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- CodeMirrorのスタイルシート -->
+    <link rel="stylesheet" href="libs/codemirror.css">
+</head>
+<body>
+    <!-- ニックネーム入力フォーム -->
+    <div id="nickname-container">
+        <label for="nickname">ニックネーム:</label>
+        <input type="text" id="nickname">
+    </div>
+
+    <!-- 音声デバイス選択 -->
+    <div id="audio-device-container">
+        <label for="audio-device-select">音声デバイス選択:</label>
+        <select id="audio-device-select">
+            <option value="default">デフォルトデバイス</option>
+        </select>
+    </div>
+
+    <!-- テンプレート選択 -->
+    <div id="template-container">
+        <label for="template-select">テンプレート選択:</label>
+        <select id="template-select">
+            <option value="default">デフォルト</option>
+            <option value="template1">テンプレート1</option>
+            <option value="template2">テンプレート2</option>
+        </select>
+    </div>
+
+    <!-- エディター -->
+    <textarea id="shader-editor"></textarea>
+
+    <!-- スライダーコンテナ -->
+    <div id="slider-container"></div>
+
+    <!-- エラーメッセージ表示 -->
+    <div id="error-message"></div>
+
+    <!-- スクリプトの読み込み -->
+    <!-- 必要なライブラリ -->
+    <script src="libs/codemirror.js"></script>
+    <script src="libs/clike.js"></script> <!-- GLSLモード用 -->
+    <!-- アプリケーションのメインスクリプト -->
+    <script src="app.js"></script>
+</body>
+</html>
