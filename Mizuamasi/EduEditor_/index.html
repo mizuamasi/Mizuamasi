@@ -3,48 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <title>ウェブベースのシェーダーエディター</title>
+    <!-- カスタムのスタイルシート -->
     <link rel="stylesheet" href="style.css">
-    <!-- CodeMirrorのスタイルシート -->
-    <link rel="stylesheet" href="libs/codemirror.css">
+    <!-- CodeMirrorのスタイルシート（CDN） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/codemirror.min.css">
+    <!-- CodeMirrorのテーマ（monokai） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/theme/monokai.min.css">
+    <!-- CodeMirrorのスクロールバー用スタイルシート -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/scroll/simplescrollbars.min.css">
 </head>
 <body>
-    <!-- ニックネーム入力フォーム -->
-    <div id="nickname-container">
-        <label for="nickname">ニックネーム:</label>
-        <input type="text" id="nickname">
+    <!-- WebGLキャンバス -->
+    <canvas id="glcanvas"></canvas>
+
+    <!-- ツールバー -->
+    <div id="toolbar">
+        <div class="toolbar-item">
+            <label for="nickname-input">ニックネーム:</label>
+            <input type="text" id="nickname-input" placeholder="Your Nickname">
+        </div>
+        <div class="toolbar-item">
+            <label for="device-select">オーディオデバイス:</label>
+            <select id="device-select">
+                <!-- デバイス一覧が動的に追加されます -->
+            </select>
+        </div>
+        <div class="toolbar-item">
+            <button id="toggle-editor">エディター非表示</button>
+        </div>
+        <div class="toolbar-item">
+            <button id="open-popup">ポップアップを開く</button>
+        </div>
     </div>
 
-    <!-- 音声デバイス選択 -->
-    <div id="audio-device-container">
-        <label for="audio-device-select">音声デバイス選択:</label>
-        <select id="audio-device-select">
-            <option value="default">デフォルトデバイス</option>
-        </select>
+    <!-- エディターとエラーログのコンテナ -->
+    <div id="editor-error-container">
+        <!-- エディターコンテナ -->
+        <div id="editor-container">
+            <!-- エディター -->
+            <div id="editor-wrapper">
+                <textarea id="shader-editor"></textarea>
+                <!-- 波形表示 -->
+                <canvas id="waveform"></canvas>
+            </div>
+        </div>
+        <!-- リサイズハンドル -->
+        <div id="vertical-drag-handle"></div>
+        <!-- エラーログ -->
+        <div id="error-log">
+            <!-- エラーメッセージがここに表示されます -->
+        </div>
     </div>
 
-    <!-- テンプレート選択 -->
-    <div id="template-container">
-        <label for="template-select">テンプレート選択:</label>
-        <select id="template-select">
-            <option value="default">デフォルト</option>
-            <option value="template1">テンプレート1</option>
-            <option value="template2">テンプレート2</option>
-        </select>
+    <!-- デバッグ情報表示 -->
+    <div id="debug-info"></div>
+
+    <!-- ニックネーム入力モーダル -->
+    <div id="nickname-modal" class="modal">
+        <div class="modal-content">
+            <h2>ニックネームを入力してください</h2>
+            <input type="text" id="modal-nickname-input" placeholder="Your Nickname">
+            <button id="modal-nickname-submit">OK</button>
+        </div>
     </div>
-
-    <!-- エディター -->
-    <textarea id="shader-editor"></textarea>
-
-    <!-- スライダーコンテナ -->
-    <div id="slider-container"></div>
-
-    <!-- エラーメッセージ表示 -->
-    <div id="error-message"></div>
 
     <!-- スクリプトの読み込み -->
-    <!-- 必要なライブラリ -->
-    <script src="libs/codemirror.js"></script>
-    <script src="libs/clike.js"></script> <!-- GLSLモード用 -->
+    <!-- CodeMirrorのスクリプト（CDN） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/codemirror.min.js"></script>
+    <!-- GLSLモード用のスクリプト（CDN） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/mode/clike/clike.min.js"></script>
+    <!-- CodeMirrorのスクロールバーアドオン -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/scroll/simplescrollbars.min.js"></script>
+    <!-- 括弧のマッチング用アドオン -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/edit/matchbrackets.min.js"></script>
+    <!-- 括弧の自動補完用アドオン -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/edit/closebrackets.min.js"></script>
     <!-- アプリケーションのメインスクリプト -->
     <script src="app.js"></script>
 </body>
