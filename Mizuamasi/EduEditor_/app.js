@@ -3,38 +3,24 @@
 // メインアプリケーションエントリーポイント
 
 import { initEditor, editor } from './editor.js';
-import { initWebGL, resizeCanvas } from './shader.js';
+import { initWebGL, resizeCanvas, getGLContext } from './shader.js';
 import { generateUniformUI } from './uniforms.js';
 import { initAudio, toggleMic, toggleWaveform, changeMicDevice } from './audio.js';
 import { onSignIn, signOut, isLoggedIn } from './auth.js';
 import { setupVerticalDragHandle } from './utils.js';
 import { saveCode, loadCode, updateSavedCodesUI } from './storage.js';
+import { compileShader } from './shader.js';
+import { CLIENT_ID } from './config.js';
 
-// 他のモジュールから関数を使用できるようにエクスポート
-export { showLoginScreen, showMainContent };
+// `onSignIn` 関数をグローバルスコープに設定
+window.onSignIn = onSignIn;
 
-window.onload = function() {
-    // ログイン状態をチェックして、画面を切り替える
-    if (isLoggedIn()) {
-        showMainContent();
-    } else {
-        showLoginScreen();
-    }
-
-    // Google Sign-In コールバックをグローバルに設定
-    window.onSignIn = onSignIn;
-    window.signOut = signOut;
-};
-
-// 以下、先ほどのコードと同じ
-
-
-function showLoginScreen() {
+export function showLoginScreen() {
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('main-content').style.display = 'none';
 }
 
-function showMainContent() {
+export function showMainContent() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
 
@@ -63,6 +49,33 @@ function showMainContent() {
     setupVerticalDragHandle();
     window.addEventListener('resize', resizeCanvas);
 }
+
+window.onload = function() {
+    // Initialize Google Sign-In
+    google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback: onSignIn,
+        auto_select: false,
+        itp_support: true,
+        use_fedcm_for_prompt: false
+    });
+
+    // Render the sign-in button
+    google.accounts.id.renderButton(
+        document.getElementById('g_id_signin'),
+        { theme: 'outline', size: 'large' } // customization attributes
+    );
+
+    // Optionally prompt the user
+    google.accounts.id.prompt();
+
+    // Check if already signed in
+    if (isLoggedIn()) {
+        showMainContent();
+    } else {
+        showLoginScreen();
+    }
+};
 
 function checkForCachedCode() {
     // キャッシュの確認処理
@@ -95,7 +108,7 @@ function sendShaderDataToPopup() {
     if (popupWindow && !popupWindow.closed) {
         const shaderData = {
             shaderCode: editor.getValue(),
-            uniforms: uniforms
+            uniforms: uniforms // assuming uniforms is globally accessible
         };
         popupWindow.postMessage(shaderData, '*');
     }

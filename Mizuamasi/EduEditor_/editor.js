@@ -15,7 +15,8 @@ export function initEditor() {
         theme: 'monokai',
         matchBrackets: true,
         autoCloseBrackets: true,
-        scrollbarStyle: 'simple'
+        scrollbarStyle: 'simple',
+        gutters: ["CodeMirror-linenumbers", "error-gutter"] // エラーマーカー用の gutter を追加
     });
 
     // 初期コードを設定
@@ -65,6 +66,9 @@ void main() {
 
     // エディターの変更イベントリスナー
     editor.on('change', function() {
+        // エラー表示をクリア
+        editor.clearGutter("error-gutter");
+
         // 更新処理
         debounceCompileShader();
         sendShaderDataToGAS();

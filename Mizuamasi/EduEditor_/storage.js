@@ -4,7 +4,7 @@
 
 import { editor } from './editor.js';
 import { GAS_SCRIPT_URL } from './config.js';
-import { nickname, uuid } from './auth.js';
+import { getNickname, getUUID } from './auth.js';
 import { compileShader } from './shader.js';
 
 export function saveCode() {
@@ -15,8 +15,8 @@ export function saveCode() {
             action: 'saveCode',
             codeName: codeName,
             codeContent: code,
-            nickname: nickname,
-            uuid: uuid
+            nickname: getNickname(),
+            uuid: getUUID()
         };
 
         fetch(GAS_SCRIPT_URL, {
@@ -42,8 +42,8 @@ export function loadCode(codeName) {
     const data = {
         action: 'loadCode',
         codeName: codeName,
-        nickname: nickname,
-        uuid: uuid
+        nickname: getNickname(),
+        uuid: getUUID()
     };
 
     fetch(GAS_SCRIPT_URL, {
@@ -72,8 +72,8 @@ export function loadCode(codeName) {
 export function updateSavedCodesUI() {
     const data = {
         action: 'getSavedCodes',
-        nickname: nickname,
-        uuid: uuid
+        nickname: getNickname(),
+        uuid: getUUID()
     };
 
     fetch(GAS_SCRIPT_URL, {
@@ -102,12 +102,12 @@ export function updateSavedCodesUI() {
     });
 }
 
-// GASへのデータ送信
+// GASへのデータ送信（ログ用）
 export function sendShaderDataToGAS() {
     const data = {
         action: 'logUsage',
-        nickname: nickname,
-        uuid: uuid,
+        nickname: getNickname(),
+        uuid: getUUID(),
         timestamp: new Date().toISOString(),
         code: editor.getValue()
     };

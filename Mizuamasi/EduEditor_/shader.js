@@ -3,8 +3,8 @@
 // シェーダーのコンパイル、プリプロセス、レンダリング
 
 import { editor } from './editor.js';
-import { uniforms, setUniforms, generateUniformUI } from './uniforms.js';
-import { audioTexture, getAudioDataArray } from './audio.js';
+import { uniforms, setUniforms, generateUniformUI, uniformDefinitions, existingUniforms } from './uniforms.js';
+import { getAudioDataArray } from './audio.js';
 
 let gl;
 let shaderProgram;
@@ -13,7 +13,12 @@ let iTime = 0;
 let startTime = Date.now();
 let debugNames = []; // デバッグ名のリスト
 let debugValues = []; // デバッグ値のリスト
-let isEditorVisible = true;
+
+// エラーハンドル用
+let errorAnnotations = [];
+
+// audio.jsからエクスポートされるオーディオテクスチャ
+export let audioTexture;
 
 export function initWebGL() {
     const canvas = document.getElementById('glcanvas');
@@ -214,7 +219,7 @@ function createShader(type, source) {
 
     const error = gl.getShaderInfoLog(shader);
     console.error('シェーダーのコンパイルに失敗しました:', error);
-    document.getElementById('error-log').textContent = error;
+    displayShaderError(error);
     gl.deleteShader(shader);
     return null;
 }
@@ -233,7 +238,7 @@ function createProgram(vertexShader, fragmentShader) {
 
     const error = gl.getProgramInfoLog(program);
     console.error('シェーダープログラムのリンクに失敗しました:', error);
-    document.getElementById('error-log').textContent = error;
+    displayShaderError(error);
     gl.deleteProgram(program);
     return null;
 }
@@ -277,7 +282,47 @@ function updateDebugInfo() {
     debugInfo.textContent = debugText;
 }
 
-// GLコンテキストを他のモジュールに渡す
+// シェーダーエラーの表示とエディターへのマッピング
+function displayShaderError(error) {
+    const errorLog = document.getElementById('error-log');
+    errorLog.textContent = error;
+
+    // エラーメッセージを解析し、CodeMirror エディターにマッピング
+    const regex = /ERROR: \d+:(\d+): (.*)/g;
+    let match;
+    let annotations = [];
+
+    while ((match = regex.exec(error)) !== null) {
+        const lineNumber = parseInt(match[1], 10) - 1; // CodeMirror は0ベース
+        const message = match[2];
+        annotations.push({
+            from: CodeMirror.Pos(lineNumber, 0),
+            to: CodeMirror.Pos(lineNumber, 0),
+            message: message,
+            severity: 'error'
+        });
+    }
+
+    // エディターにエラーを表示
+    editor.getDoc().clearGutter('error-gutter');
+    editor.getAllMarks().forEach(mark => mark.clear());
+
+    annotations.forEach(annotation => {
+        editor.addLineClass(annotation.from.line, 'background', 'error-line');
+        const marker = document.createElement('div');
+        marker.className = 'error-marker';
+        marker.title = annotation.message;
+        editor.setGutterMarker(annotation.from.line, 'error-gutter', marker);
+    });
+}
+
+// updateShader関数を追加しエクスポート
+export function updateShader() {
+    // ユニフォームの値を更新して再描画
+    setUniforms(gl, shaderProgram);
+}
+
+// GLコンテキストを取得する関数をエクスポート
 export function getGLContext() {
     return gl;
 }
