@@ -1,199 +1,191 @@
-body {
+/* style.css */
+
+/* 全体のリセット */
+* {
     margin: 0;
     padding: 0;
-    overflow: hidden;
-    font-family: sans-serif;
+    box-sizing: border-box;
 }
 
-/* WebGLキャンバスのスタイル */
-canvas#glcanvas {
+/* ボディ */
+body {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ログイン画面 */
+#login-screen {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1; /* 背景に表示 */
+    background-color: #1e1e1e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-/* ツールバーのスタイル */
+#login-screen h1 {
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+/* ツールバー */
 #toolbar {
     display: flex;
     align-items: center;
-    background: rgba(45, 45, 45, 0.8); /* 透明度設定 */
     padding: 10px;
-    color: #ffffff;
+    background-color: #2d2d2d;
     position: fixed;
     top: 0;
-    left: 0;
-    right: 0;
-    z-index: 3; /* エディターの上に表示 */
+    width: 100%;
+    z-index: 1000;
 }
 
-/* ツールバー内の各アイテムのスタイル */
 .toolbar-item {
-    margin-right: 20px;
-    display: flex;
-    align-items: center;
+    margin-right: 15px;
+    position: relative;
+}
+
+.toolbar-item button {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.toolbar-item button:hover {
+    color: #00afff;
+}
+
+.toolbar-item button:focus {
+    outline: none;
+}
+
+.toolbar-item select {
+    background-color: #3c3c3c;
+    color: #ffffff;
+    border: none;
+    padding: 5px;
 }
 
 .toolbar-item label {
     margin-right: 5px;
 }
 
-.toolbar-item input,
-.toolbar-item select {
+/* ツールチップ */
+.toolbar-item button[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    background-color: #444;
     padding: 5px;
-    border: none;
-    border-radius: 3px;
-    background-color: #ffffff;
-    color: #000000;
-}
-
-.toolbar-item button {
-    margin-left: 5px;
-    padding: 5px 10px;
-    background: #4CAF50;
-    border: none;
-    border-radius: 3px;
-    color: #ffffff;
-    cursor: pointer;
-}
-
-.toolbar-item button:hover {
-    background: #45a049;
+    border-radius: 5px;
+    top: 30px;
+    font-size: 12px;
+    color: #fff;
+    white-space: nowrap;
+    z-index: 1001;
 }
 
 /* エディターとエラーログのコンテナ */
 #editor-error-container {
-    position: absolute;
-    top: 60px; /* ツールバーの下に配置 */
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
     display: flex;
     flex-direction: column;
-    z-index: 2;
-}
-
-/* エディターコンテナ */
-#editor-container {
-    flex-grow: 1;
-    overflow: hidden;
-    background: transparent;
-    position: relative;
-}
-
-/* エディターのラッパー */
-#editor-wrapper {
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* 実行結果の背景 */
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
-/* CodeMirrorのスタイル */
-.CodeMirror {
-    flex-grow: 1;
-    font-family: monospace;
-    font-size: 14px;
-    background: transparent !important;
-    color: #ffffff;
-}
-
-/* ガター（行番号）のスタイル */
-.CodeMirror-gutters {
-    background-color: transparent !important;
-    border-right: 1px solid #555;
-}
-
-.CodeMirror-linenumbers {
-    color: #ffffff;
-}
-
-/* リサイズハンドル（垂直方向） */
-#vertical-drag-handle {
-    height: 10px;
-    cursor: row-resize;
-    background-color: rgba(200, 200, 200, 0.5);
-}
-
-#vertical-drag-handle:hover {
-    background-color: rgba(170, 170, 170, 0.5);
-}
-
-/* エラーログ */
-#error-log {
-    height: 150px; /* エディタの高さに合わせて調整 */
-    overflow-y: auto;
-    background: rgba(0, 0, 0, 0.7);
-    color: #ff5555;
-    padding: 5px;
-    font-family: monospace;
-    font-size: 14px;
-}
-
-/* デバッグ情報のスタイル */
-#debug-info {
-    position: absolute;
-    bottom: 160px;
-    left: 10px;
-    color: #ffffff;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 5px;
-    font-family: monospace;
-    font-size: 14px;
-    z-index: 3;
-}
-
-/* ニックネーム入力モーダル */
-.modal {
-    display: none; /* 非表示にする */
     position: fixed;
-    z-index: 4; /* 最前面に表示 */
-    left: 0;
-    top: 0;
+    bottom: 0;
     width: 100%;
+    height: 40%;
+}
+
+#editor-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background-color: #1e1e1e;
+}
+
+#editor-wrapper {
+    flex: 1;
+}
+
+.CodeMirror {
     height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.8);
 }
 
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 300px;
-    text-align: center;
+#vertical-drag-handle {
+    height: 5px;
+    background-color: #3c3c3c;
+    cursor: ns-resize;
 }
 
-.modal-content h2 {
-    margin-top: 0;
-}
-
-.modal-content input {
-    width: 80%;
+#error-log {
+    background-color: #2d2d2d;
+    color: #ff0000;
     padding: 10px;
-    margin-bottom: 10px;
+    overflow: auto;
+    max-height: 20%;
 }
 
-.modal-content button {
-    padding: 10px 20px;
-    background: #4CAF50;
-    border: none;
-    color: #ffffff;
-    cursor: pointer;
+/* コントロールパネル */
+#control-panel {
+    position: fixed;
+    right: 0;
+    top: 60px;
+    width: 300px;
+    background-color: #2d2d2d;
+    padding: 10px;
+    height: calc(100% - 60px);
+    overflow-y: auto;
 }
 
-.modal-content button:hover {
-    background: #45a049;
+.control-group {
+    margin-bottom: 15px;
 }
 
-/* 波形表示のスタイル */
-#waveform {
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.control-group input[type="range"] {
     width: 100%;
-    height: 100px;
-    background: rgba(255, 255, 255, 0.1);
+}
+
+.control-group canvas {
+    display: block;
+    margin: 0 auto;
+}
+
+/* デバッグ情報 */
+#debug-info {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    background-color: rgba(45, 45, 45, 0.8);
+    color: #ffffff;
+    padding: 10px;
+    max-width: 300px;
+    overflow: auto;
+}
+
+/* オーディオ波形表示 */
+#waveform-canvas {
+    width: 100%;
+    height: 50px;
+}
+
+/* WebGLキャンバス */
+#glcanvas {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: calc(100% - 300px);
+    height: calc(100% - 60px - 40%);
+    background-color: #000000;
 }

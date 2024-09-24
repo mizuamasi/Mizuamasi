@@ -11,59 +11,97 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/theme/monokai.min.css">
     <!-- CodeMirrorのスクロールバー用スタイルシート -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/scroll/simplescrollbars.min.css">
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
+    <!-- アイコンフォント -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- WebGLキャンバス -->
-    <canvas id="glcanvas"></canvas>
-
-    <!-- ツールバー -->
-    <div id="toolbar">
-        <div class="toolbar-item">
-            <label for="nickname-input">ニックネーム:</label>
-            <input type="text" id="nickname-input" placeholder="Your Nickname">
+    <!-- ログイン画面 -->
+    <div id="login-screen">
+        <h1>ログインしてください</h1>
+        <!-- Googleログインボタン -->
+        <div id="g_id_onload"
+             data-client_id="167015442829-lgmhke028k0a4h3bl87itthbad1148ao.apps.googleusercontent.com"
+             data-callback="onSignIn"
+             data-auto_select="false"
+             data-login_uri=""
+             data-itp_support="true">
         </div>
-        <div class="toolbar-item">
-            <label for="device-select">オーディオデバイス:</label>
-            <select id="device-select">
-                <!-- デバイス一覧が動的に追加されます -->
-            </select>
-        </div>
-        <div class="toolbar-item">
-            <button id="toggle-editor">エディター非表示</button>
-        </div>
-        <div class="toolbar-item">
-            <button id="open-popup">ポップアップを開く</button>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left">
         </div>
     </div>
 
-    <!-- エディターとエラーログのコンテナ -->
-    <div id="editor-error-container">
-        <!-- エディターコンテナ -->
-        <div id="editor-container">
-            <!-- エディター -->
-            <div id="editor-wrapper">
-                <textarea id="shader-editor"></textarea>
-                <!-- 波形表示 -->
-                <canvas id="waveform"></canvas>
+    <!-- メインコンテンツ -->
+    <div id="main-content" style="display: none;">
+        <!-- WebGLキャンバス -->
+        <canvas id="glcanvas"></canvas>
+
+        <!-- ツールバー -->
+        <div id="toolbar">
+            <div class="toolbar-item">
+                <button id="toggle-editor" title="エディターの表示/非表示"><i class="fas fa-code"></i></button>
+            </div>
+            <div class="toolbar-item">
+                <button id="open-popup" title="ポップアップを開く"><i class="fas fa-external-link-alt"></i></button>
+            </div>
+            <div class="toolbar-item">
+                <button onclick="signOut();" title="ログアウト"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+            <!-- ユーザー名表示エリア -->
+            <div class="toolbar-item" id="user-display"></div>
+            <div class="toolbar-item">
+                <button id="save-code-button" title="コードを保存"><i class="fas fa-save"></i></button>
+            </div>
+            <div class="toolbar-item">
+                <label for="saved-codes-select">コード:</label>
+                <select id="saved-codes-select"></select>
+                <button id="load-code-button" title="コードを読み込み"><i class="fas fa-folder-open"></i></button>
+            </div>
+            <div class="toolbar-item">
+                <!-- マイク関連のコントロール -->
+                <button id="toggle-mic" title="マイクのオン/オフ"><i class="fas fa-microphone-slash"></i></button>
+                <button id="toggle-waveform" title="波形表示のオン/オフ"><i class="fas fa-wave-square"></i></button>
+                <label for="mic-select">マイク:</label>
+                <select id="mic-select"></select>
             </div>
         </div>
-        <!-- リサイズハンドル -->
-        <div id="vertical-drag-handle"></div>
-        <!-- エラーログ -->
-        <div id="error-log">
-            <!-- エラーメッセージがここに表示されます -->
+
+        <!-- エディターとエラーログのコンテナ -->
+        <div id="editor-error-container">
+            <!-- エディターコンテナ -->
+            <div id="editor-container">
+                <!-- オーディオ波形表示 -->
+                <canvas id="waveform-canvas"></canvas>
+                <!-- エディター -->
+                <div id="editor-wrapper">
+                    <textarea id="shader-editor"></textarea>
+                </div>
+            </div>
+            <!-- リサイズハンドル -->
+            <div id="vertical-drag-handle"></div>
+            <!-- エラーログ -->
+            <div id="error-log">
+                <!-- エラーメッセージがここに表示されます -->
+            </div>
         </div>
-    </div>
 
-    <!-- デバッグ情報表示 -->
-    <div id="debug-info"></div>
+        <!-- デバッグ情報表示 -->
+        <div id="debug-info"></div>
 
-    <!-- ニックネーム入力モーダル -->
-    <div id="nickname-modal" class="modal">
-        <div class="modal-content">
-            <h2>ニックネームを入力してください</h2>
-            <input type="text" id="modal-nickname-input" placeholder="Your Nickname">
-            <button id="modal-nickname-submit">OK</button>
+        <!-- コントロールパネル -->
+        <div id="control-panel">
+            <!-- コントローラーがここに生成されます -->
         </div>
     </div>
 
@@ -78,7 +116,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/edit/matchbrackets.min.js"></script>
     <!-- 括弧の自動補完用アドオン -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/edit/closebrackets.min.js"></script>
+    <!-- コンフィグ -->
+    <script type="module" src="config.js"></script>
     <!-- アプリケーションのメインスクリプト -->
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

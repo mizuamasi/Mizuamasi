@@ -1,4 +1,25 @@
-/*
+// editor.js
+
+// コードエディタの初期化と管理
+
+import { debounce } from './utils.js';
+import { compileShader } from './shader.js';
+import { sendShaderDataToGAS } from './storage.js';
+
+export let editor;
+
+export function initEditor() {
+    editor = CodeMirror.fromTextArea(document.getElementById('shader-editor'), {
+        mode: 'x-shader/x-fragment',
+        lineNumbers: true,
+        theme: 'monokai',
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        scrollbarStyle: 'simple'
+    });
+
+    // 初期コードを設定
+    const initialShaderCode = `/*
 iTime: シェーダーの実行時間（秒）
 iResolution: 画面の解像度（ピクセル）
 iMouse: マウス座標（ピクセル）
@@ -39,4 +60,21 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
 void main() {
     mainImage(gl_FragColor, gl_FragCoord.xy);
+}`;
+    editor.setValue(initialShaderCode);
+
+    // エディターの変更イベントリスナー
+    editor.on('change', function() {
+        // 更新処理
+        debounceCompileShader();
+        sendShaderDataToGAS();
+
+        // キャッシュに保存
+        localStorage.setItem('cachedCode', editor.getValue());
+    });
 }
+
+// Debounce関数
+const debounceCompileShader = debounce(function() {
+    compileShader();
+}, 300);
