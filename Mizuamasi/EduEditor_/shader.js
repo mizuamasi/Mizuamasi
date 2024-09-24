@@ -5,12 +5,13 @@
 import { editor } from './editor.js';
 import { uniforms, setUniforms, generateUniformUI, uniformDefinitions, existingUniforms } from './uniforms.js';
 import { getAudioDataArray } from './audio.js';
+import { resetUniformDefinitions, resetExistingUniforms } from './uniforms.js';
 
 let gl;
 let shaderProgram;
 let positionBuffer;
-let iTime = 0;
-let startTime = Date.now();
+export let iTime = 0;
+export let startTime = Date.now();
 let debugNames = []; // デバッグ名のリスト
 let debugValues = []; // デバッグ値のリスト
 
@@ -157,8 +158,11 @@ function preprocessShaderCode(shaderCode) {
 // ユニフォーム変数の解析
 function parseUniforms(shaderCode) {
     const uniformRegex = /uniform\s+(float|vec[2-4]|int|bool)\s+(\w+)\s*;\s*(\/\/\s*option:\s*(\w+))?/g;
-    uniformDefinitions = {}; // リセット
-    existingUniforms = {}; // ユーザーが宣言したユニフォーム変数
+    resetUniformDefinitions(); // 初期化関数を使う
+    resetExistingUniforms();   // 同様に初期化関数を使う
+    
+    //uniformDefinitions = {}; // リセット
+    //existingUniforms = {}; // ユーザーが宣言したユニフォーム変数
     let match;
     while ((match = uniformRegex.exec(shaderCode)) !== null) {
         const type = match[1];

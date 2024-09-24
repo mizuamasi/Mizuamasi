@@ -2,11 +2,20 @@
 
 // ユニフォーム変数の管理とUIコントロールの生成
 
-import { updateShader } from './shader.js';
+import { updateShader,startTime,iTime } from './shader.js';
 
 export let uniforms = {};
 export let uniformDefinitions = {}; // shader.jsでも使用
 export let existingUniforms = {}; // shader.jsでも使用
+
+// ユニフォームをリセットして新しいユニフォームを追加する関数
+export function resetUniformDefinitions() {
+    uniformDefinitions = {}; // 直接再代入ではなく、初期化関数で管理
+}
+
+export function resetExistingUniforms() {
+    existingUniforms = {}; // 同様に再代入は避け、初期化関数で管理
+}
 
 export function generateUniformUI() {
     const controlPanel = document.getElementById('control-panel');
