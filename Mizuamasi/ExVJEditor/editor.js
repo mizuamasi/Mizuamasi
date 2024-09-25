@@ -256,6 +256,7 @@ function startTrackingUsage() {
 
     fetch('https://script.google.com/macros/s/AKfycbxjpZ3tIz3o1QT56076toqw0EkOG7ZwCMtqOvhg6ixbXXZJICdMlZbdJ0AkTOY1pOUqnw/exec', {
       method: 'POST',
+      mode: 'cors', // CORS対応
       headers: {
         'Content-Type': 'application/json'
       },
@@ -287,6 +288,7 @@ function saveCode() {
 
   fetch('https://script.google.com/macros/s/AKfycbxjpZ3tIz3o1QT56076toqw0EkOG7ZwCMtqOvhg6ixbXXZJICdMlZbdJ0AkTOY1pOUqnw/exec', {
     method: 'POST',
+    mode: 'cors', // CORS対応
     headers: {
       'Content-Type': 'application/json'
     },
