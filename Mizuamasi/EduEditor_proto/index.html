@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web-based VJ Software</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+</head>
+<body>
+    <div id="toolbar">
+        <button id="toggleEditor">エディター表示/非表示</button>
+        <button id="saveCode">保存</button>
+        <button id="loadCode">読み込み</button>
+        <button id="toggleMic">マイク入力 オン/オフ</button>
+        <button id="toggleWaveform">波形表示 オン/オフ</button>
+        <button id="openPopup">ポップアップ表示</button>
+    </div>
+    <div id="main-container">
+        <div id="editor-container">
+            <textarea id="shader-editor"></textarea>
+        </div>
+        <div id="render-container">
+            <canvas id="glcanvas"></canvas>
+        </div>
+    </div>
+    <div id="controls-container">
+        <div id="uniform-controls"></div>
+        <div id="error-output"></div>
+        <div id="debug-output"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+    <script src="app.js" type="module"></script>
+</body>
+</html>

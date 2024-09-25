@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ビジュアル表示</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            position: relative;
+            z-index: 0;
+        }
+        #visualCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="visualCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('visualCanvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+        if (!gl) {
+            alert('WebGLがサポートされていません。');
+        }
+
+        // キャンバスサイズの調整
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // デフォルトの頂点シェーダー
+        const vertexShaderSource = `
+            attribute vec4 a_position;
+            void main() {
+                gl_Position = a_position;
+            }
+        `;
+
+        // 初期のフラグメントシェーダー
+        let fragmentShaderSource = `
+            void main() {
+                gl_FragColor = vec4(1, 0, 0, 1); // 赤色
+            }
+        `;
+
+        let program = null;
+        let a_position = null;
+
+        // ユニフォーム変数
+        let uniforms = {};
+
+        // シェーダーのコンパイル
+        function compileShader(gl, source, type) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+            if (success) {
+                return shader;
+            }
+
+            console.error(gl.getShaderInfoLog(shader));
+            postLog(`シェーダーのコンパイルエラー: ${gl.getShaderInfoLog(shader)}`);
+            gl.deleteShader(shader);
+            return null;
+        }
+
+        // プログラムのリンク
+        function createProgram(gl, vertexShader, fragmentShader) {
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            const success = gl.getProgramParameter(program, gl.LINK_STATUS);
+            if (success) {
+                return program;
+            }
+
+            console.error(gl.getProgramInfoLog(program));
+            postLog(`プログラムのリンクエラー: ${gl.getProgramInfoLog(program)}`);
+            gl.deleteProgram(program);
+            return null;
+        }
+
+        // シェーダープログラムの更新
+        function updateProgram() {
+            if (program) {
+                gl.deleteProgram(program);
+            }
+
+            const vertexShader = compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
+            const fragmentShader = compileShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER);
+
+            if (!vertexShader || !fragmentShader) {
+                return;
+            }
+
+            program = createProgram(gl, vertexShader, fragmentShader);
+
+            if (!program) {
+                return;
+            }
+
+            gl.useProgram(program);
+
+            // 配列バッファの設定
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            const positions = [
+                -1, -1,
+                 1, -1,
+                -1,  1,
+                -1,  1,
+                 1, -1,
+                 1,  1,
+            ];
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+            a_position = gl.getAttribLocation(program, 'a_position');
+            gl.enableVertexAttribArray(a_position);
+            gl.vertexAttribPointer(a_position, 2, gl.FLOAT, false, 0, 0);
+
+            // シェーダーにユニフォームを設定
+            for (const name in uniforms) {
+                const location = gl.getUniformLocation(program, name);
+                if (location === null) continue;
+                const value = uniforms[name];
+                if (typeof value === 'number') {
+                    gl.uniform1f(location, value);
+                } else if (Array.isArray(value)) {
+                    if (value.length === 2) {
+                        gl.uniform2fv(location, value);
+                    } else if (value.length === 3) {
+                        gl.uniform3fv(location, value);
+                    } else if (value.length === 4) {
+                        gl.uniform4fv(location, value);
+                    }
+                }
+            }
+        }
+
+        // 描画ループ
+        function render() {
+            gl.clearColor(0, 0, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            if (program) {
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+            }
+            requestAnimationFrame(render);
+        }
+        requestAnimationFrame(render);
+
+        // メッセージ受信時の処理
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+            if (data.shaderCode) {
+                fragmentShaderSource = data.shaderCode;
+                updateProgram();
+            }
+            if (data.uniforms) {
+                uniforms = data.uniforms;
+                updateProgram();
+            }
+        });
+
+        // ログをメインウィンドウに送信
+        function postLog(message) {
+            window.opener.postMessage({ log: message }, '*');
+        }
+    </script>
+</body>
+</html>

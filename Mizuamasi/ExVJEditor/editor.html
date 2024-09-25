@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>シェーダーエディター</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- CodeMirrorのスタイルシートをCDN経由で読み込み -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+</head>
+<body>
+  <!-- 上部ツールバー -->
+  <div id="toolbar">
+    <button id="save-btn">保存</button>
+    <button id="toggle-editor-btn">エディタ表示/非表示</button>
+    <!-- マイク設定 -->
+    <label for="microphone-select">マイク選択:</label>
+    <select id="microphone-select">
+      <option value="">マイクを選択</option>
+    </select>
+    <!-- 解像度設定 -->
+    出力解像度:
+    <input type="number" id="resolution-width" value="1920" min="1"> x
+    <input type="number" id="resolution-height" value="1080" min="1">
+    <button id="apply-resolution-btn">適用</button>
+    <!-- ポップアップボタン -->
+    <button id="popup-btn">ポップアップ表示</button>
+  </div>
+
+  <div id="main-container">
+    <!-- 左側のコンテナ（エディタとコンソール） -->
+    <div id="left-container">
+      <!-- エディタコンテナ -->
+      <div id="editor-container">
+        <textarea id="shader-code"></textarea>
+      </div>
+      <!-- コンソールコンテナ -->
+      <div id="console-container">
+        <div id="console-output"></div>
+      </div>
+    </div>
+    <!-- 右側のコントロールパネル -->
+    <div id="control-container">
+      <h2>コントロールパネル</h2>
+      <!-- スライダーが自動生成されます -->
+      <div id="uniform-controls"></div>
+    </div>
+  </div>
+  <!-- レンダリングキャンバス -->
+  <canvas id="render-canvas"></canvas>
+
+  <!-- 必要なスクリプト -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+  <script src="editor.js"></script>
+</body>
+</html>

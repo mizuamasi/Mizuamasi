@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Web VJアプリ</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- config.js を先に読み込む -->
+    <script src="config.js"></script>
+
+    <!-- Google Client ID のメタタグを静的に設定 -->
+    <meta name="google-signin-client_id" content="">
+
+    <!-- Set the meta tag with client_id after config.js is loaded -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const meta = document.querySelector('meta[name="google-signin-client_id"]');
+            if (meta && CONFIG.GOOGLE_CLIENT_ID) {
+                meta.content = CONFIG.GOOGLE_CLIENT_ID;
+            } else {
+                console.error("Google Client IDが設定されていません。");
+            }
+        });
+    </script>
+
+    <!-- Google Platform Library -->
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/clike/clike.min.js"></script>
+</head>
+<body>
+    <canvas id="visualCanvas"></canvas> <!-- キャンバスを追加 -->
+
+    <div id="header">
+        <div class="g-signin2" data-onsuccess="onSignIn"></div>
+        <button id="signOutButton" style="display: none;">サインアウト</button>
+    </div>
+
+    <div id="mainContainer">
+        <div id="editorContainer">
+            <textarea id="editor">// ここにGLSLフラグメントシェーダーコードを入力してください
+// 例:
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float radius;
+uniform vec3 color;
+
+void main() {
+    vec2 uv = gl_FragCoord.xy / vec2(800.0, 600.0);
+    vec2 center = vec2(0.5, 0.5);
+    float dist = distance(uv, center);
+    if (dist < radius) {
+        gl_FragColor = vec4(color, 1.0);
+    } else {
+        gl_FragColor = vec4(0.0);
+    }
+}
+            </textarea>
+            <button id="saveButton">保存</button>
+            <button id="visualButton">ビジュアル表示</button>
+        </div>
+        <div id="controlPanel">
+            <h3>コントロールパネル</h3>
+            <div id="uniformControls">
+                <!-- スライダーが動的に追加されます -->
+            </div>
+        </div>
+    </div>
+    <div id="logContainer">
+        <h3>ログ / エラー</h3>
+        <div id="log"></div>
+    </div>
+
+    <!-- CodeMirrorとアプリのメインスクリプト -->
+    <script src="main.js"></script>
+</body>
+</html>

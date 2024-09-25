@@ -1,0 +1,90 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+}
+
+#visualCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none; /* キャンバスが操作を受け取らないように */
+}
+
+#header {
+    padding: 10px;
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: 1;
+}
+
+#mainContainer {
+    display: flex;
+    flex: 1;
+    height: calc(70vh - 50px); /* 上2/3 - ヘッダーの高さ調整 */
+    position: relative;
+    z-index: 1;
+}
+
+#editorContainer {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.8); /* 背景を半透明に */
+}
+
+#editor {
+    flex: 1;
+    border: 1px solid #ccc;
+    height: 100%;
+}
+
+#controlPanel {
+    flex: 1;
+    border-left: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: rgba(255, 255, 255, 0.8); /* 背景を半透明に */
+}
+
+#logContainer {
+    height: 30vh; /* 下1/3 */
+    border-top: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: scroll;
+    background-color: #fafafa;
+    z-index: 1;
+}
+
+#log {
+    white-space: pre-wrap;
+}
+
+button {
+    margin-top: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.uniform-control {
+    margin-bottom: 10px;
+}
+
+.uniform-control label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.uniform-control input[type="range"] {
+    width: 100%;
+}
