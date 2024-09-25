@@ -15,9 +15,11 @@ export function initEditor() {
         theme: 'monokai',
         matchBrackets: true,
         autoCloseBrackets: true,
-        scrollbarStyle: 'simple',
-        gutters: ["CodeMirror-linenumbers", "error-gutter"] // エラーマーカー用の gutter を追加
+        scrollbarStyle: null,
+        gutters: ["CodeMirror-linenumbers", "error-gutter"],
+        viewportMargin: Infinity
     });
+
 
     // 初期コードを設定
     const initialShaderCode = `/*

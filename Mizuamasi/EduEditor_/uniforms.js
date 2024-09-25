@@ -1,27 +1,25 @@
 // uniforms.js
 
-// ユニフォーム変数の管理とUIコントロールの生成
-
-import { updateShader,startTime,iTime } from './shader.js';
+import { startTime } from './shader.js';
+import { updateShader } from './shader.js';
 
 export let uniforms = {};
-export let uniformDefinitions = {}; // shader.jsでも使用
-export let existingUniforms = {}; // shader.jsでも使用
+export let uniformDefinitions = {};
+export let existingUniforms = {};
 
-// ユニフォームをリセットして新しいユニフォームを追加する関数
 export function resetUniformDefinitions() {
-    uniformDefinitions = {}; // 直接再代入ではなく、初期化関数で管理
+    uniformDefinitions = {};
 }
 
 export function resetExistingUniforms() {
-    existingUniforms = {}; // 同様に再代入は避け、初期化関数で管理
+    existingUniforms = {};
 }
 
 export function generateUniformUI() {
     const controlPanel = document.getElementById('control-panel');
     if (!controlPanel) return;
 
-    controlPanel.innerHTML = ''; // 既存のUIをクリア
+    controlPanel.innerHTML = '';
 
     for (let name in uniformDefinitions) {
         const uniform = uniformDefinitions[name];
@@ -53,21 +51,31 @@ export function generateUniformUI() {
                     updateShader();
                 });
                 controlGroup.appendChild(input);
+
+                const valueDisplay = document.createElement('span');
+                valueDisplay.textContent = value;
+                controlGroup.appendChild(valueDisplay);
+
+                input.addEventListener('input', (e) => {
+                    uniforms[name] = parseFloat(e.target.value);
+                    valueDisplay.textContent = e.target.value;
+                    updateShader();
+                });
             }
         } else if (type === 'vec2') {
             if (option === '2DController') {
                 create2DController(controlGroup, name, value);
             } else {
-                // デフォルトのスライダーを使用
+                // デフォルトのスライダーを使用（必要に応じて実装）
             }
         } else if (type === 'vec3') {
             if (option === '3DController') {
                 create3DController(controlGroup, name, value);
             } else {
-                // デフォルトのスライダーを使用
+                // デフォルトのスライダーを使用（必要に応じて実装）
             }
         } else if (type === 'vec4') {
-            // vec4の処理（スライダーを使用）
+            // vec4の処理（必要に応じて実装）
         }
 
         controlPanel.appendChild(controlGroup);
@@ -103,17 +111,13 @@ function create2DController(container, name, value) {
         updateValue(e);
     });
 
-    canvas.addEventListener('mousemove', (e) => {
+    document.addEventListener('mousemove', (e) => {
         if (isDragging) {
             updateValue(e);
         }
     });
 
-    canvas.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-
-    canvas.addEventListener('mouseleave', () => {
+    document.addEventListener('mouseup', () => {
         isDragging = false;
     });
 
@@ -121,8 +125,8 @@ function create2DController(container, name, value) {
         const rect = canvas.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / canvas.width) * 2 - 1;
         const y = -(((e.clientY - rect.top) / canvas.height) * 2 - 1);
-        value[0] = x;
-        value[1] = y;
+        value[0] = Math.max(-1, Math.min(1, x));
+        value[1] = Math.max(-1, Math.min(1, y));
         uniforms[name] = value;
         draw();
         updateShader();
@@ -215,14 +219,17 @@ function create3DController(container, name, value) {
     }
 
     renderer.domElement.addEventListener('mousedown', onMouseDown);
-    renderer.domElement.addEventListener('mousemove', onMouseMove);
-    renderer.domElement.addEventListener('mouseup', onMouseUp);
-    renderer.domElement.addEventListener('mouseleave', onMouseUp);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
 }
 
 // ユニフォームの設定
 export function setUniforms(gl, shaderProgram) {
-    // ビルトインユニフォームの設定
+    if (!gl || !shaderProgram) {
+        console.error('Invalid GL context or shader program');
+        return;
+    }
+
     const timeLocation = gl.getUniformLocation(shaderProgram, 'iTime');
     if (timeLocation !== null) {
         gl.uniform1f(timeLocation, (Date.now() - startTime) / 1000.0);

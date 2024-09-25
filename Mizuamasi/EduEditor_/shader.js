@@ -1,7 +1,5 @@
 // shader.js
 
-// シェーダーのコンパイル、プリプロセス、レンダリング
-
 import { editor } from './editor.js';
 import { uniforms, setUniforms, generateUniformUI, uniformDefinitions, existingUniforms } from './uniforms.js';
 import { getAudioDataArray } from './audio.js';
@@ -12,13 +10,10 @@ let shaderProgram;
 let positionBuffer;
 export let iTime = 0;
 export let startTime = Date.now();
-let debugNames = []; // デバッグ名のリスト
-let debugValues = []; // デバッグ値のリスト
 
-// エラーハンドル用
-let errorAnnotations = [];
+let debugNames = [];
+let debugValues = [];
 
-// audio.jsからエクスポートされるオーディオテクスチャ
 export let audioTexture;
 
 export function initWebGL() {
@@ -29,10 +24,8 @@ export function initWebGL() {
         return;
     }
 
-    // キャンバスのサイズを設定
     resizeCanvas();
 
-    // フルスクリーンクアッドの頂点データ
     const positions = new Float32Array([
         -1, -1,
          1, -1,
@@ -42,18 +35,17 @@ export function initWebGL() {
          1,  1
     ]);
 
-    // バッファの設定
     positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 
-    // シェーダーの初期コンパイル
     compileShader();
 }
 
 export function resizeCanvas() {
     const canvas = document.getElementById('glcanvas');
-    canvas.width = window.innerWidth - 300; // コントロールパネルの幅を引く
+    const controlPanelWidth = document.getElementById('control-panel').offsetWidth;
+    canvas.width = window.innerWidth - controlPanelWidth;
     canvas.height = window.innerHeight;
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 }
@@ -79,6 +71,10 @@ export function compileShader() {
         return;
     }
 
+    if (shaderProgram) {
+        gl.deleteProgram(shaderProgram);
+    }
+
     shaderProgram = createProgram(vertexShader, fragmentShader);
     if (!shaderProgram) {
         return;
@@ -86,20 +82,16 @@ export function compileShader() {
 
     gl.useProgram(shaderProgram);
 
-    // ユニフォームの設定
     setUniforms(gl, shaderProgram);
 
-    // 属性の設定
     const positionLocation = gl.getAttribLocation(shaderProgram, 'a_position');
     gl.enableVertexAttribArray(positionLocation);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 
-    // レンダリング開始
     render();
 }
 
-// デフォルトの頂点シェーダーソース
 const defaultVertexShaderSource = `
     attribute vec2 a_position;
     void main() {
@@ -107,28 +99,23 @@ const defaultVertexShaderSource = `
     }
 `;
 
-// シェーダーのプリプロセス
 function preprocessShaderCode(shaderCode) {
-    // ユニフォーム変数の解析
     parseUniforms(shaderCode);
 
-    // デバッグ用の関数を挿入
     const printRegex = /print\(\s*"([^"]+)"\s*,\s*([^)]+)\s*\);/g;
     let match;
     let debugCount = 0;
-    debugNames = []; // リセット
-    debugValues = []; // リセット
+    debugNames = [];
+    debugValues = [];
 
-    // print関数をdebugVarNに置き換える
     shaderCode = shaderCode.replace(printRegex, function(match, p1, p2) {
         debugCount++;
         const debugVar = `debugVar${debugCount}`;
         debugNames.push(p1);
-        debugValues.push(0); // 初期値
+        debugValues.push(0);
         return `${debugVar} = ${p2};`;
     });
 
-    // debugVarNをグローバル変数として宣言
     let debugVariables = '';
     for (let i = 1; i <= debugCount; i++) {
         debugVariables += `float debugVar${i} = 0.0;\n`;
@@ -145,30 +132,25 @@ function preprocessShaderCode(shaderCode) {
         uniform vec4 iDate;
         uniform int iKeyboard[256];
 
-        // ユーザー定義のユニフォーム変数
         ${getUserUniforms()}
 
-        // デバッグ用変数
         ${debugVariables}
 
         ${shaderCode}
     `;
 }
 
-// ユニフォーム変数の解析
 function parseUniforms(shaderCode) {
     const uniformRegex = /uniform\s+(float|vec[2-4]|int|bool)\s+(\w+)\s*;\s*(\/\/\s*option:\s*(\w+))?/g;
-    resetUniformDefinitions(); // 初期化関数を使う
-    resetExistingUniforms();   // 同様に初期化関数を使う
-    
-    //uniformDefinitions = {}; // リセット
-    //existingUniforms = {}; // ユーザーが宣言したユニフォーム変数
+    resetUniformDefinitions();
+    resetExistingUniforms();
+
     let match;
     while ((match = uniformRegex.exec(shaderCode)) !== null) {
         const type = match[1];
         const name = match[2];
         const option = match[4] || 'default';
-        existingUniforms[name] = true; // ユーザーが宣言したユニフォームとして記録
+        existingUniforms[name] = true;
         let defaultValue;
         switch (type) {
             case 'float':
@@ -194,15 +176,13 @@ function parseUniforms(shaderCode) {
         }
         uniformDefinitions[name] = { type, value: defaultValue, option };
     }
-    generateUniformUI(); // ユニフォームUIの生成
+    generateUniformUI();
 }
 
-// ユーザー定義のユニフォーム変数を生成
 function getUserUniforms() {
     let uniformsCode = '';
     for (let name in uniformDefinitions) {
         const type = uniformDefinitions[name].type;
-        // 既にユーザーが宣言している場合は再宣言しない
         if (!existingUniforms[name]) {
             uniformsCode += `uniform ${type} ${name};\n`;
         }
@@ -210,7 +190,6 @@ function getUserUniforms() {
     return uniformsCode;
 }
 
-// シェーダーの作成
 function createShader(type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -228,7 +207,6 @@ function createShader(type, source) {
     return null;
 }
 
-// シェーダープログラムの作成
 function createProgram(vertexShader, fragmentShader) {
     const program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -247,36 +225,25 @@ function createProgram(vertexShader, fragmentShader) {
     return null;
 }
 
-// レンダリングループ
 function render() {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // 時間の更新
     iTime = (Date.now() - startTime) / 1000.0;
     const timeLocation = gl.getUniformLocation(shaderProgram, 'iTime');
     if (timeLocation !== null) {
         gl.uniform1f(timeLocation, iTime);
     }
 
-    // オーディオデータの更新
-    const audioDataArray = getAudioDataArray();
-    if (audioDataArray) {
-        // オーディオテクスチャにデータを転送
-        gl.bindTexture(gl.TEXTURE_2D, audioTexture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, audioDataArray.length, 1, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, audioDataArray);
-    }
+    setUniforms(gl, shaderProgram);
 
-    // シェーダーの描画
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-    // デバッグ情報の取得
     updateDebugInfo();
 
     requestAnimationFrame(render);
 }
 
-// デバッグ情報の更新
 function updateDebugInfo() {
     const debugInfo = document.getElementById('debug-info');
     let debugText = '';
@@ -286,18 +253,16 @@ function updateDebugInfo() {
     debugInfo.textContent = debugText;
 }
 
-// シェーダーエラーの表示とエディターへのマッピング
 function displayShaderError(error) {
     const errorLog = document.getElementById('error-log');
     errorLog.textContent = error;
 
-    // エラーメッセージを解析し、CodeMirror エディターにマッピング
     const regex = /ERROR: \d+:(\d+): (.*)/g;
     let match;
     let annotations = [];
 
     while ((match = regex.exec(error)) !== null) {
-        const lineNumber = parseInt(match[1], 10) - 1; // CodeMirror は0ベース
+        const lineNumber = parseInt(match[1], 10) - 1;
         const message = match[2];
         annotations.push({
             from: CodeMirror.Pos(lineNumber, 0),
@@ -307,7 +272,6 @@ function displayShaderError(error) {
         });
     }
 
-    // エディターにエラーを表示
     editor.getDoc().clearGutter('error-gutter');
     editor.getAllMarks().forEach(mark => mark.clear());
 
@@ -320,13 +284,12 @@ function displayShaderError(error) {
     });
 }
 
-// updateShader関数を追加しエクスポート
 export function updateShader() {
-    // ユニフォームの値を更新して再描画
     setUniforms(gl, shaderProgram);
 }
 
-// GLコンテキストを取得する関数をエクスポート
 export function getGLContext() {
     return gl;
 }
+
+window.updateShader = updateShader;

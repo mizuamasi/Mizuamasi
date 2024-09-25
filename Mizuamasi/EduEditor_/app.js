@@ -1,7 +1,5 @@
 // app.js
 
-// メインアプリケーションエントリーポイント
-
 import { initEditor, editor } from './editor.js';
 import { initWebGL, resizeCanvas, getGLContext } from './shader.js';
 import { generateUniformUI } from './uniforms.js';
@@ -12,7 +10,6 @@ import { saveCode, loadCode, updateSavedCodesUI } from './storage.js';
 import { compileShader } from './shader.js';
 import { CLIENT_ID } from './config.js';
 
-// `onSignIn` 関数をグローバルスコープに設定
 window.onSignIn = onSignIn;
 
 export function showLoginScreen() {
@@ -22,14 +19,14 @@ export function showLoginScreen() {
 
 export function showMainContent() {
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
+    document.getElementById('main-content').style.display = 'flex';
 
     initEditor();
     initWebGL();
     generateUniformUI();
     initAudio();
 
-    checkForCachedCode(); // キャッシュの確認
+    checkForCachedCode();
 
     document.getElementById('open-popup').addEventListener('click', openPopup);
     document.getElementById('toggle-editor').addEventListener('click', toggleEditorVisibility);
@@ -51,7 +48,6 @@ export function showMainContent() {
 }
 
 window.onload = function() {
-    // Initialize Google Sign-In
     google.accounts.id.initialize({
         client_id: CLIENT_ID,
         callback: onSignIn,
@@ -60,16 +56,13 @@ window.onload = function() {
         use_fedcm_for_prompt: false
     });
 
-    // Render the sign-in button
     google.accounts.id.renderButton(
         document.getElementById('g_id_signin'),
-        { theme: 'outline', size: 'large' } // customization attributes
+        { theme: 'outline', size: 'large' }
     );
 
-    // Optionally prompt the user
     google.accounts.id.prompt();
 
-    // Check if already signed in
     if (isLoggedIn()) {
         showMainContent();
     } else {
@@ -78,7 +71,6 @@ window.onload = function() {
 };
 
 function checkForCachedCode() {
-    // キャッシュの確認処理
     const cachedCode = localStorage.getItem('cachedCode');
     if (cachedCode) {
         const restore = confirm('以前の編集内容が見つかりました。復元しますか？');
@@ -91,7 +83,6 @@ function checkForCachedCode() {
     }
 }
 
-// ポップアップウィンドウの開閉
 let popupWindow = null;
 
 function openPopup() {
@@ -103,18 +94,16 @@ function openPopup() {
     sendShaderDataToPopup();
 }
 
-// シェーダーコードをポップアップに送信
 function sendShaderDataToPopup() {
     if (popupWindow && !popupWindow.closed) {
         const shaderData = {
             shaderCode: editor.getValue(),
-            uniforms: uniforms // assuming uniforms is globally accessible
+            uniforms: uniforms
         };
         popupWindow.postMessage(shaderData, '*');
     }
 }
 
-// エディター表示/非表示の切り替え
 let isEditorVisible = true;
 
 function toggleEditorVisibility() {

@@ -1,7 +1,4 @@
 // storage.js
-
-// コードの保存と読み込み（GAS経由）
-
 import { editor } from './editor.js';
 import { GAS_SCRIPT_URL } from './config.js';
 import { getNickname, getUUID } from './auth.js';
@@ -21,7 +18,7 @@ export function saveCode() {
 
         fetch(GAS_SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors',
+            mode: 'cors',
             body: JSON.stringify(data),
             headers: {
                 'Content-Type': 'application/json'
@@ -29,7 +26,7 @@ export function saveCode() {
         })
         .then(() => {
             console.log('Code saved successfully.');
-            updateSavedCodesUI(); // 保存後にリストを更新
+            updateSavedCodesUI();
             alert('コードが保存されました。');
         })
         .catch(error => {
@@ -54,10 +51,10 @@ export function loadCode(codeName) {
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.text())
-    .then(codeContent => {
-        if (codeContent) {
-            editor.setValue(codeContent);
+    .then(response => response.json())
+    .then(data => {
+        if (data.content) {
+            editor.setValue(data.content);
             compileShader();
             alert(`${codeName} を読み込みました。`);
         } else {
@@ -89,7 +86,7 @@ export function updateSavedCodesUI() {
         const savedCodesSelect = document.getElementById('saved-codes-select');
         if (!savedCodesSelect) return;
 
-        savedCodesSelect.innerHTML = ''; // 既存のオプションをクリア
+        savedCodesSelect.innerHTML = '';
         for (let codeName in savedCodes) {
             const option = document.createElement('option');
             option.value = codeName;
@@ -102,7 +99,6 @@ export function updateSavedCodesUI() {
     });
 }
 
-// GASへのデータ送信（ログ用）
 export function sendShaderDataToGAS() {
     const data = {
         action: 'logUsage',
@@ -114,7 +110,7 @@ export function sendShaderDataToGAS() {
 
     fetch(GAS_SCRIPT_URL, {
         method: 'POST',
-        mode: 'no-cors',
+        mode: 'cors',
         body: JSON.stringify(data),
         headers: {
             'Content-Type': 'application/json'

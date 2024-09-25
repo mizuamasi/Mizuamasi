@@ -1,13 +1,10 @@
 /* style.css */
-
-/* 全体のリセット */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* ボディ */
 body {
     background-color: #1e1e1e;
     color: #ffffff;
@@ -16,7 +13,6 @@ body {
     overflow: hidden;
 }
 
-/* ログイン画面 */
 #login-screen {
     position: fixed;
     top: 0;
@@ -36,15 +32,31 @@ body {
     margin-bottom: 20px;
 }
 
-/* ツールバー */
+#main-content {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#glcanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
 #toolbar {
     display: flex;
     align-items: center;
     padding: 10px;
-    background-color: #2d2d2d;
+    background-color: rgba(45, 45, 45, 0.8);
     position: fixed;
     top: 0;
-    width: 100%;
+    left: 0;
+    right: 300px;
     z-index: 1000;
 }
 
@@ -80,7 +92,6 @@ body {
     margin-right: 5px;
 }
 
-/* ツールチップ */
 .toolbar-item button[title]:hover::after {
     content: attr(title);
     position: absolute;
@@ -94,68 +105,69 @@ body {
     z-index: 1002;
 }
 
-/* エディターとエラーログのコンテナ */
+#control-panel {
+    width: 300px;
+    height: calc(100% - 50px);
+    overflow-y: auto;
+    padding: 10px;
+    box-sizing: border-box;
+    background-color: rgba(45, 45, 45, 0.8);
+    position: absolute;
+    right: 0;
+    top: 50px;
+}
+
 #editor-error-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 300px;
+    height: 50%;
     display: flex;
     flex-direction: column;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    height: 40%;
-    z-index: 999;
+    background-color: rgba(30, 30, 30, 0.8);
 }
 
 #editor-container {
-    display: flex;
-    flex-direction: column;
     flex: 1;
-    background-color: #1e1e1e;
-}
-
-#editor-wrapper {
-    flex: 1;
+    overflow: hidden;
 }
 
 .CodeMirror {
-    height: 100%;
+    height: 100% !important;
+    background-color: rgba(30, 30, 30, 0.6) !important;
 }
 
-.CodeMirror-gutter {
-    background: #2d2d2d;
-    color: #aaa;
+#vertical-drag-handle {
+    height: 5px;
+    background-color: #555;
+    cursor: row-resize;
 }
 
-.error-line {
-    background-color: rgba(255, 0, 0, 0.1);
-}
-
-.error-marker {
-    width: 10px;
-    height: 10px;
-    background-color: #ff0000;
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-/* エラーログ */
 #error-log {
-    background-color: #2d2d2d;
-    color: #ff0000;
+    height: 30%;
+    overflow-y: auto;
     padding: 10px;
-    overflow: auto;
-    max-height: 20%;
+    background-color: rgba(45, 45, 45, 0.8);
+    color: #ff0000;
 }
 
-/* コントロールパネル */
-#control-panel {
+#debug-info {
     position: fixed;
-    right: 0;
-    top: 60px;
-    width: 300px;
-    background-color: #2d2d2d;
+    left: 10px;
+    bottom: 40%;
+    background-color: rgba(45, 45, 45, 0.8);
+    color: #ffffff;
     padding: 10px;
-    height: calc(100% - 60px);
-    overflow-y: auto;
+    max-width: 300px;
+    max-height: 30%;
+    overflow: auto;
+    z-index: 999;
+}
+
+#waveform-canvas {
+    width: 100%;
+    height: 50px;
 }
 
 .control-group {
@@ -174,34 +186,4 @@ body {
 .control-group canvas {
     display: block;
     margin: 0 auto;
-}
-
-/* デバッグ情報 */
-#debug-info {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    background-color: rgba(45, 45, 45, 0.8);
-    color: #ffffff;
-    padding: 10px;
-    max-width: 300px;
-    overflow: auto;
-    z-index: 999;
-}
-
-/* オーディオ波形表示 */
-#waveform-canvas {
-    width: 100%;
-    height: 50px;
-}
-
-/* WebGLキャンバス */
-#glcanvas {
-    position: fixed;
-    top: 60px;
-    left: 0;
-    width: calc(100% - 300px);
-    height: calc(100% - 60px - 40%);
-    background-color: #000000;
-    z-index: 500;
 }
