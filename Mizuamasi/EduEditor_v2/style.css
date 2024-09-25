@@ -1,0 +1,212 @@
+/* 全体のリセット */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ボディ */
+body {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ログイン画面 */
+#login-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #1e1e1e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+}
+
+#login-screen h1 {
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+/* ツールバー */
+#toolbar {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #2d2d2d;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.toolbar-item {
+    margin-right: 15px;
+    position: relative;
+}
+
+.toolbar-item button {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.toolbar-item button:hover {
+    color: #00afff;
+}
+
+.toolbar-item button:focus {
+    outline: none;
+}
+
+.toolbar-item select {
+    background-color: #3c3c3c;
+    color: #ffffff;
+    border: none;
+    padding: 5px;
+}
+
+.toolbar-item label {
+    margin-right: 5px;
+}
+
+/* ツールチップ */
+.toolbar-item button[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    background-color: #444;
+    padding: 5px;
+    border-radius: 5px;
+    top: 30px;
+    font-size: 12px;
+    color: #fff;
+    white-space: nowrap;
+    z-index: 1002;
+}
+
+/* レンダリングキャンバス */
+#glcanvas {
+    position: fixed;
+    top: 60px; /* ツールバーの高さ */
+    left: 0;
+    width: calc(100% - 400px); /* コントロールパネルの幅を差し引く */
+    height: calc(100% - 60px);
+    background-color: #000000;
+    z-index: 500;
+}
+
+/* エディターコンテナ */
+#editor-container {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: calc(100% - 400px);
+    height: calc(100% - 60px);
+    background: transparent;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+/* エディターラッパー */
+#editor-wrapper {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.5); /* 半透明の背景 */
+}
+
+/* CodeMirror */
+.CodeMirror {
+    height: 100%;
+    background: transparent !important; /* 背景を透明に */
+    color: #ffffff;
+}
+
+.CodeMirror-gutter {
+    background: #2d2d2d;
+    color: #aaa;
+}
+
+.error-line {
+    background-color: rgba(255, 0, 0, 0.1);
+}
+
+.error-marker {
+    width: 10px;
+    height: 10px;
+    background-color: #ff0000;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* エラーログ */
+#error-log {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: calc(100% - 400px);
+    background-color: #2d2d2d;
+    color: #ff0000;
+    padding: 10px;
+    max-height: 20%;
+    overflow: auto;
+    z-index: 1001;
+}
+
+/* コントロールパネル */
+#control-panel {
+    position: fixed;
+    top: 60px;
+    right: 0;
+    width: 400px;
+    height: calc(100% - 60px);
+    background-color: #222;
+    overflow-y: auto;
+    padding: 10px;
+    box-sizing: border-box;
+    z-index: 999;
+}
+
+.control-group {
+    margin-bottom: 15px;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.control-group input[type="range"] {
+    width: 100%;
+}
+
+.control-group canvas {
+    display: block;
+    margin: 0 auto;
+}
+
+/* デバッグ情報 */
+#debug-info {
+    position: fixed;
+    left: 0;
+    bottom: 20%;
+    background-color: rgba(45, 45, 45, 0.8);
+    color: #ffffff;
+    padding: 10px;
+    max-width: 300px;
+    overflow: auto;
+    z-index: 1002;
+}
+
+/* オーディオ波形表示 */
+#waveform-canvas {
+    width: 100%;
+    height: 50px;
+}

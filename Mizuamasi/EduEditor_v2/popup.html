@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Shader Output</title>
+    <!-- ダミーファビコンを設定（エラー回避） -->
+    <link rel="icon" href="data:,">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            width: 100%;
+            height: 100%;
+        }
+        canvas#popup-glcanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="popup-glcanvas"></canvas>
+
+    <script type="module">
+        import { initWebGL, compileShader, preprocessShaderCode, getGLContext } from './shader.js';
+
+        let gl;
+        let shaderProgram;
+        let positionBuffer;
+        let iTime = 0;
+        let startTime = Date.now();
+
+        let uniforms = {};
+
+        // デフォルトの頂点シェーダーソース
+        const defaultVertexShaderSource = `
+            attribute vec2 a_position;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+        `;
+
+        // WebGLの初期化
+        function init() {
+            initWebGL();
+            compileShader(defaultVertexShaderSource, `
+                precision mediump float;
+                void main() {
+                    gl_FragColor = vec4(0.0);
+                }
+            `);
+        }
+
+        // シェーダーデータの受信
+        window.addEventListener('message', function(event) {
+            const data = event.data;
+            if (data.shaderCode) {
+                const shaderCode = preprocessShaderCode(data.shaderCode);
+                compileShader(defaultVertexShaderSource, shaderCode);
+            }
+            if (data.uniforms) {
+                updateUniforms(data.uniforms);
+            }
+        });
+
+        // シェーダーのプリプロセス（必要に応じて）
+        function preprocessShaderCode(shaderCode) {
+            // 必要なプリプロセスをここに実装
+            return `
+                precision mediump float;
+                precision mediump int;
+
+                uniform float iTime;
+                uniform vec3 iResolution;
+                uniform vec4 iMouse;
+                uniform sampler2D iChannel0;
+                uniform vec4 iDate;
+                uniform int iKeyboard[256];
+
+                // ユーザー定義のユニフォーム変数
+                ${getUserUniforms()}
+
+                ${shaderCode}
+            `;
+        }
+
+        // ユーザー定義のユニフォーム変数を生成
+        function getUserUniforms() {
+            let uniformsCode = '';
+            for (let name in uniforms) {
+                const value = uniforms[name];
+                if (Array.isArray(value)) {
+                    const type = `vec${value.length}`;
+                    uniformsCode += `uniform ${type} ${name};\n`;
+                } else if (typeof value === 'number') {
+                    uniformsCode += `uniform float ${name};\n`;
+                } else if (typeof value === 'boolean') {
+                    uniformsCode += `uniform bool ${name};\n`;
+                }
+            }
+            return uniformsCode;
+        }
+
+        // ユニフォームの設定
+        function setUniforms() {
+            // ビルトインユニフォームの設定
+            const glContext = getGLContext();
+            const timeLocation = glContext.getUniformLocation(shaderProgram, 'iTime');
+            if (timeLocation !== null) {
+                glContext.uniform1f(timeLocation, (Date.now() - startTime) / 1000.0);
+            }
+
+            const resolutionLocation = glContext.getUniformLocation(shaderProgram, 'iResolution');
+            if (resolutionLocation !== null) {
+                glContext.uniform3f(resolutionLocation, glContext.canvas.width, glContext.canvas.height, 1.0);
+            }
+
+            // ユーザー定義のユニフォーム変数の設定
+            for (let name in uniforms) {
+                const location = glContext.getUniformLocation(shaderProgram, name);
+                if (location !== null) {
+                    const value = uniforms[name];
+                    if (Array.isArray(value)) {
+                        if (value.length === 2) {
+                            glContext.uniform2fv(location, value);
+                        } else if (value.length === 3) {
+                            glContext.uniform3fv(location, value);
+                        } else if (value.length === 4) {
+                            glContext.uniform4fv(location, value);
+                        }
+                    } else if (typeof value === 'boolean') {
+                        glContext.uniform1i(location, value ? 1 : 0);
+                    } else if (typeof value === 'number') {
+                        glContext.uniform1f(location, value);
+                    }
+                }
+            }
+        }
+
+        // ユニフォームの更新
+        function updateUniforms(newUniforms) {
+            uniforms = { ...uniforms, ...newUniforms };
+            setUniforms();
+        }
+
+        // レンダリングループ
+        function render() {
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            // ユニフォームの値を更新
+            setUniforms();
+
+            // シェーダーの描画
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            requestAnimationFrame(render);
+        }
+
+        window.onload = function() {
+            init();
+            render();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ExVJEditor</title>
+    <!-- カスタムのスタイルシート -->
+    <link rel="stylesheet" href="style.css">
+    <!-- CodeMirrorのスタイルシート（CDN） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/codemirror.min.css">
+    <!-- CodeMirrorのテーマ（monokai） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/theme/monokai.min.css">
+    <!-- CodeMirrorのスクロールバー用スタイルシート -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/scroll/simplescrollbars.min.css">
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://unpkg.com/three@0.142.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- アイコンフォント -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- ログイン画面 -->
+    <div id="login-screen">
+        <h1>ログインしてください</h1>
+        <!-- Googleログインボタンのコンテナ -->
+        <div id="g_id_signin"></div>
+    </div>
+
+    <!-- メインコンテンツ -->
+    <div id="main-content" style="display: none;">
+        <!-- レンダリングキャンバス -->
+        <canvas id="glcanvas"></canvas>
+
+        <!-- エディターコンテナ -->
+        <div id="editor-container">
+            <!-- オーディオ波形表示 -->
+            <canvas id="waveform-canvas"></canvas>
+            <!-- エディター -->
+            <div id="editor-wrapper">
+                <textarea id="shader-editor"></textarea>
+            </div>
+        </div>
+
+        <!-- エラーログ -->
+        <div id="error-log">
+            <!-- エラーメッセージがここに表示されます -->
+        </div>
+
+        <!-- デバッグ情報表示 -->
+        <div id="debug-info"></div>
+
+        <!-- ツールバー -->
+        <div id="toolbar">
+            <div class="toolbar-item">
+                <button id="toggle-editor" title="エディターの表示/非表示"><i class="fas fa-code"></i></button>
+            </div>
+            <div class="toolbar-item">
+                <button id="open-popup" title="ポップアップを開く"><i class="fas fa-external-link-alt"></i></button>
+            </div>
+            <div class="toolbar-item">
+                <button onclick="signOut();" title="ログアウト"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+            <!-- ユーザー名表示エリア -->
+            <div class="toolbar-item" id="user-display"></div>
+            <div class="toolbar-item">
+                <button id="save-code-button" title="コードを保存"><i class="fas fa-save"></i></button>
+            </div>
+            <div class="toolbar-item">
+                <label for="saved-codes-select">コード:</label>
+                <select id="saved-codes-select"></select>
+                <button id="load-code-button" title="コードを読み込み"><i class="fas fa-folder-open"></i></button>
+            </div>
+            <div class="toolbar-item">
+                <!-- マイク関連のコントロール -->
+                <button id="toggle-mic" title="マイクのオン/オフ"><i class="fas fa-microphone-slash"></i></button>
+                <button id="toggle-waveform" title="波形表示のオン/オフ"><i class="fas fa-wave-square"></i></button>
+                <label for="mic-select">マイク:</label>
+                <select id="mic-select"></select>
+            </div>
+        </div>
+
+        <!-- コントロールパネル -->
+        <div id="control-panel">
+            <!-- コントローラーがここに生成されます -->
+        </div>
+    </div>
+
+    <!-- スクリプトの読み込み -->
+    <!-- CodeMirrorのスクリプト（CDN） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/codemirror.min.js"></script>
+    <!-- GLSLモード用のスクリプト（CDN） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/mode/clike/clike.min.js"></script>
+    <!-- CodeMirrorのスクロールバーアドオン -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/scroll/simplescrollbars.min.js"></script>
+    <!-- 括弧のマッチング用アドオン -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/edit/matchbrackets.min.js"></script>
+    <!-- 括弧の自動補完用アドオン -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.9/addon/edit/closebrackets.min.js"></script>
+    <!-- モジュール -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>
