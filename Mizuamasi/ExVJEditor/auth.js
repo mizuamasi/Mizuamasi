@@ -13,16 +13,17 @@ async function register() {
   }
 
   try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbxjpZ3tIz3o1QT56076toqw0EkOG7ZwCMtqOvhg6ixbXXZJICdMlZbdJ0AkTOY1pOUqnw/exec', {
+    const data = new URLSearchParams();
+    data.append('action', 'register');
+    data.append('nickname', nickname);
+    data.append('password', password);
+
+    const response = await fetch('https://script.google.com/macros/s/AKfycbynrTZxEGbsEYWQSPzYlhV2VRW42krn2kwr6T74uJ0V7biEKbPcgE50B6mBX4LkyHBblw/exec', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify({
-        action: 'register',
-        nickname: nickname,
-        password: password
-      })
+      body: data.toString()
     });
 
     const result = await response.json();
@@ -43,16 +44,17 @@ async function login() {
   const password = document.getElementById('password').value.trim();
 
   try {
-    const response = await fetch('https://script.google.com/macros/s/AKfycbxjpZ3tIz3o1QT56076toqw0EkOG7ZwCMtqOvhg6ixbXXZJICdMlZbdJ0AkTOY1pOUqnw/exec', {
+    const data = new URLSearchParams();
+    data.append('action', 'login');
+    data.append('nickname', nickname);
+    data.append('password', password);
+
+    const response = await fetch('https://script.google.com/macros/s/AKfycbynrTZxEGbsEYWQSPzYlhV2VRW42krn2kwr6T74uJ0V7biEKbPcgE50B6mBX4LkyHBblw/exec', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify({
-        action: 'login',
-        nickname: nickname,
-        password: password
-      })
+      body: data.toString()
     });
 
     const result = await response.json();

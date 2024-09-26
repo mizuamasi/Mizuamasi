@@ -26,6 +26,9 @@ window.onload = function() {
   getMicrophoneDevices();
 };
 
+/**
+ * エディターの初期化
+ */
 function initializeEditor() {
   editor = CodeMirror.fromTextArea(document.getElementById('shader-code'), {
     mode: 'x-shader/x-fragment',
@@ -38,6 +41,9 @@ function initializeEditor() {
   editor.on('change', debounce(compileShader, 500));
 }
 
+/**
+ * WebGLの初期化
+ */
 function initializeGL() {
   const canvas = document.getElementById('render-canvas');
   gl = canvas.getContext('webgl2');
@@ -52,6 +58,9 @@ function initializeGL() {
   resizeCanvas();
 }
 
+/**
+ * シェーダーのコンパイルとプログラムのリンク
+ */
 function compileShader() {
   const shaderSource = editor.getValue();
   const vertexShaderSource = `
@@ -86,6 +95,12 @@ function compileShader() {
   }
 }
 
+/**
+ * シェーダーの作成
+ * @param {number} type - シェーダーの種類
+ * @param {string} source - シェーダーソースコード
+ * @return {WebGLShader|null} - コンパイルされたシェーダーまたはnull
+ */
 function createShader(type, source) {
   const shader = gl.createShader(type);
   gl.shaderSource(shader, source);
@@ -99,6 +114,12 @@ function createShader(type, source) {
   return shader;
 }
 
+/**
+ * プログラムの作成
+ * @param {WebGLShader} vs - 頂点シェーダー
+ * @param {WebGLShader} fs - フラグメントシェーダー
+ * @return {WebGLProgram|null} - リンクされたプログラムまたはnull
+ */
 function createProgram(vs, fs) {
   const prog = gl.createProgram();
   gl.attachShader(prog, vs);
@@ -113,6 +134,10 @@ function createProgram(vs, fs) {
   return prog;
 }
 
+/**
+ * シェーダーソースからUniform変数を抽出
+ * @param {string} shaderSource - フラグメントシェーダーソースコード
+ */
 function extractUniforms(shaderSource) {
   const regex = /uniform\s+(float|vec[234])\s+(\w+);(?:\s*\/\/\s*option\s*(\{[^}]*\}))?/g;
   let match;
@@ -133,11 +158,22 @@ function extractUniforms(shaderSource) {
   }
 }
 
+/**
+ * Uniform変数のデフォルト値を取得
+ * @param {string} type - Uniform変数の型
+ * @return {Array<number>} - デフォルト値
+ */
 function getDefaultUniformValue(type) {
   const size = parseInt(type.slice(-1)) || 1;
   return Array(size).fill(0.0);
 }
 
+/**
+ * Uniformコントロールの作成
+ * @param {string} name - Uniform変数の名前
+ * @param {string} type - Uniform変数の型
+ * @param {Object} options - オプション（最小値、最大値、ステップなど）
+ */
 function createUniformControl(name, type, options) {
   const controlContainer = document.getElementById('uniform-controls');
   const label = document.createElement('label');
@@ -160,6 +196,9 @@ function createUniformControl(name, type, options) {
   }
 }
 
+/**
+ * レンダリング関数
+ */
 function render() {
   if (!program) return;
 
@@ -211,6 +250,9 @@ function render() {
   requestAnimationFrame(render);
 }
 
+/**
+ * 組み込みUniformの設定
+ */
 function setBuiltInUniforms() {
   const currentTime = (performance.now() - startTime) / 1000;
 
@@ -249,28 +291,39 @@ canvas.addEventListener('mouseup', () => {
   mousePressed = false;
 });
 
+/**
+ * 使用時間のトラッキング開始
+ * 5分ごとに使用時間と更新回数をサーバーに送信
+ */
 function startTrackingUsage() {
   setInterval(() => {
     const session = JSON.parse(localStorage.getItem('session'));
     if (!session) return;
 
-    fetch('https://script.google.com/macros/s/AKfycbxjpZ3tIz3o1QT56076toqw0EkOG7ZwCMtqOvhg6ixbXXZJICdMlZbdJ0AkTOY1pOUqnw/exec', {
+    const usageTime = 300; // 5分（300秒）
+    const updateCount = 1; // 1回の更新
+
+    const data = new URLSearchParams();
+    data.append('action', 'updateUsage');
+    data.append('nickname', session.nickname);
+    data.append('usageTime', usageTime);
+    data.append('updateCount', updateCount);
+
+    fetch('https://script.google.com/macros/s/AKfycbynrTZxEGbsEYWQSPzYlhV2VRW42krn2kwr6T74uJ0V7biEKbPcgE50B6mBX4LkyHBblw/exec', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify({
-        action: 'updateUsage',
-        nickname: session.nickname,
-        usageTime: 300, // 5分（300秒）として送信
-        updateCount: 1 // 1回の更新として送信
-      })
+      body: data.toString()
     }).catch(error => {
       console.error('使用時間トラッキングエラー:', error);
     });
   }, 300000); // 5分ごと
 }
 
+/**
+ * イベントリスナーの設定
+ */
 function setupEventListeners() {
   document.getElementById('save-btn').addEventListener('click', saveCode);
   document.getElementById('popup-btn').addEventListener('click', openPopup);
@@ -279,30 +332,18 @@ function setupEventListeners() {
   document.getElementById('microphone-select').addEventListener('change', startMicrophone);
 }
 
+/**
+ * コードの保存
+ * ローカルストレージに保存
+ */
 function saveCode() {
   const code = editor.getValue();
   localStorage.setItem('savedCode', code);
-
-  const session = JSON.parse(localStorage.getItem('session'));
-  if (!session) return;
-
-  fetch('https://script.google.com/macros/s/AKfycbxjpZ3tIz3o1QT56076toqw0EkOG7ZwCMtqOvhg6ixbXXZJICdMlZbdJ0AkTOY1pOUqnw/exec', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      action: 'saveCode',
-      nickname: session.nickname,
-      uuid: session.nickname, // UUIDをニックネームで代用
-      codeName: 'exampleCode', // 必要に応じて動的に設定
-      codeContent: code
-    })
-  }).catch(error => {
-    console.error('コード保存エラー:', error);
-  });
 }
 
+/**
+ * 保存されたコードの読み込み
+ */
 function loadSavedCode() {
   const savedCode = localStorage.getItem('savedCode');
   if (savedCode) {
@@ -310,17 +351,20 @@ function loadSavedCode() {
   } else {
     // 初期コードを設定
     editor.setValue(`
-// print関数の使い方
-// print(変数);
-
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-    // シェーダーコードをここに記述
-}
+    // print関数の使い方
+    // print(変数);
+    
+    void mainImage( out vec4 fragColor, in vec2 fragCoord )
+    {
+        // シェーダーコードをここに記述
+    }
     `);
   }
 }
 
+/**
+ * ポップアップウィンドウの開設とシェーダーコードの送信
+ */
 function openPopup() {
   const popup = window.open('', 'popupWindow', 'width=800,height=600');
   popup.document.write(`
@@ -352,6 +396,13 @@ function openPopup() {
           }
         });
         
+        /**
+         * シェーダーのコンパイルとレンダリング
+         * @param {string} shaderSource - フラグメントシェーダーソースコード
+         * @param {WebGLRenderingContext} gl - WebGLコンテキスト
+         * @param {number} width - キャンバスの幅
+         * @param {number} height - キャンバスの高さ
+         */
         function compileAndRender(shaderSource, gl, width, height) {
           const vertexShaderSource = \`
             attribute vec4 position;
@@ -395,6 +446,13 @@ function openPopup() {
           gl.drawArrays(gl.TRIANGLES, 0, 6);
         }
 
+        /**
+         * 組み込みUniformの設定
+         * @param {WebGLRenderingContext} gl - WebGLコンテキスト
+         * @param {WebGLProgram} program - シェーダープログラム
+         * @param {number} width - キャンバスの幅
+         * @param {number} height - キャンバスの高さ
+         */
         function setBuiltInUniforms(gl, program, width, height) {
           const iResolutionLocation = gl.getUniformLocation(program, 'iResolution');
           if (iResolutionLocation) {
@@ -413,6 +471,13 @@ function openPopup() {
           }
         }
 
+        /**
+         * シェーダーの作成
+         * @param {WebGLRenderingContext} gl - WebGLコンテキスト
+         * @param {number} type - シェーダーの種類
+         * @param {string} source - シェーダーソースコード
+         * @return {WebGLShader|null} - コンパイルされたシェーダーまたはnull
+         */
         function createShader(gl, type, source) {
           const shader = gl.createShader(type);
           gl.shaderSource(shader, source);
@@ -427,6 +492,12 @@ function openPopup() {
           return shader;
         }
 
+        /**
+         * プログラムの作成
+         * @param {WebGLShader} vs - 頂点シェーダー
+         * @param {WebGLShader} fs - フラグメントシェーダー
+         * @return {WebGLProgram|null} - リンクされたプログラムまたはnull
+         */
         function createProgram(gl, vs, fs) {
           const program = gl.createProgram();
           gl.attachShader(program, vs);
@@ -454,6 +525,9 @@ function openPopup() {
   }, { once: true });
 }
 
+/**
+ * 解像度の適用
+ */
 function applyResolution() {
   const widthInput = document.getElementById('resolution-width');
   const heightInput = document.getElementById('resolution-height');
@@ -462,6 +536,9 @@ function applyResolution() {
   resizeCanvas();
 }
 
+/**
+ * キャンバスのリサイズ
+ */
 function resizeCanvas() {
   const canvas = document.getElementById('render-canvas');
   canvas.width = canvasWidth;
@@ -469,6 +546,9 @@ function resizeCanvas() {
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 }
 
+/**
+ * エディターの表示/非表示の切り替え
+ */
 function toggleEditor() {
   isEditorVisible = !isEditorVisible;
   const editorContainer = document.getElementById('editor-container');
@@ -479,11 +559,21 @@ function toggleEditor() {
   }
 }
 
+/**
+ * エラーメッセージの表示
+ * @param {string} error - エラーメッセージ
+ */
 function showError(error) {
   document.getElementById('console-output').innerText = error;
   // エディター内でエラー箇所をハイライトする処理を追加可能
 }
 
+/**
+ * デバウンス関数
+ * @param {Function} func - 実行する関数
+ * @param {number} wait - 待機時間（ミリ秒）
+ * @return {Function} - デバウンスされた関数
+ */
 function debounce(func, wait) {
   let timeout;
   return function(...args) {
@@ -492,7 +582,9 @@ function debounce(func, wait) {
   };
 }
 
-// マイク入力の処理
+/**
+ * マイク入力の処理
+ */
 async function getMicrophoneDevices() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
     console.log("このブラウザではenumerateDevicesがサポートされていません。");
@@ -515,6 +607,9 @@ async function getMicrophoneDevices() {
   }
 }
 
+/**
+ * マイクの開始
+ */
 async function startMicrophone() {
   const deviceId = document.getElementById('microphone-select').value;
   if (!deviceId) return;
@@ -544,6 +639,9 @@ async function startMicrophone() {
   }
 }
 
+/**
+ * オーディオテクスチャの作成
+ */
 function createAudioTexture() {
   audioTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, audioTexture);
@@ -562,6 +660,9 @@ function createAudioTexture() {
   );
 }
 
+/**
+ * オーディオテクスチャの更新
+ */
 function updateAudioTexture() {
   if (analyser && audioDataArray) {
     analyser.getByteFrequencyData(audioDataArray);
@@ -581,6 +682,9 @@ function updateAudioTexture() {
   }
 }
 
+/**
+ * オーディオテクスチャUniformの設定
+ */
 function setAudioTextureUniform() {
   const iChannel0Location = gl.getUniformLocation(program, 'iChannel0');
   if (iChannel0Location) {
