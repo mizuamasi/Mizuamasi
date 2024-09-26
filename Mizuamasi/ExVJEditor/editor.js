@@ -256,14 +256,14 @@ function startTrackingUsage() {
 
     fetch('https://script.google.com/macros/s/AKfycbxjpZ3tIz3o1QT56076toqw0EkOG7ZwCMtqOvhg6ixbXXZJICdMlZbdJ0AkTOY1pOUqnw/exec', {
       method: 'POST',
-      mode: 'cors', // CORS対応
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        action: 'trackUsage',
+        action: 'updateUsage',
         nickname: session.nickname,
-        timestamp: new Date().toISOString()
+        usageTime: 300, // 5分（300秒）として送信
+        updateCount: 1 // 1回の更新として送信
       })
     }).catch(error => {
       console.error('使用時間トラッキングエラー:', error);
@@ -288,15 +288,15 @@ function saveCode() {
 
   fetch('https://script.google.com/macros/s/AKfycbxjpZ3tIz3o1QT56076toqw0EkOG7ZwCMtqOvhg6ixbXXZJICdMlZbdJ0AkTOY1pOUqnw/exec', {
     method: 'POST',
-    mode: 'cors', // CORS対応
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       action: 'saveCode',
       nickname: session.nickname,
-      timestamp: new Date().toISOString(),
-      code: code
+      uuid: session.nickname, // UUIDをニックネームで代用
+      codeName: 'exampleCode', // 必要に応じて動的に設定
+      codeContent: code
     })
   }).catch(error => {
     console.error('コード保存エラー:', error);
@@ -387,6 +387,15 @@ function openPopup() {
           gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
           
           // 組み込みUniformの設定
+          setBuiltInUniforms(gl, program, width, height);
+          
+          // 描画
+          gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+          gl.drawArrays(gl.TRIANGLES, 0, 6);
+        }
+
+        function setBuiltInUniforms(gl, program, width, height) {
           const iResolutionLocation = gl.getUniformLocation(program, 'iResolution');
           if (iResolutionLocation) {
             gl.uniform3f(iResolutionLocation, width, height, 1.0);
@@ -394,18 +403,14 @@ function openPopup() {
 
           const iTimeLocation = gl.getUniformLocation(program, 'iTime');
           if (iTimeLocation) {
+            const startTime = performance.now();
             gl.uniform1f(iTimeLocation, (performance.now() - startTime) / 1000);
           }
 
           const iMouseLocation = gl.getUniformLocation(program, 'iMouse');
           if (iMouseLocation) {
-            gl.uniform4f(iMouseLocation, mouseX, mouseY, mousePressed ? 1.0 : 0.0, 0.0);
+            gl.uniform4f(iMouseLocation, 0.0, 0.0, 0.0, 0.0); // マウス情報を送信する場合は適宜変更
           }
-
-          // 描画
-          gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-          gl.clear(gl.COLOR_BUFFER_BIT);
-          gl.drawArrays(gl.TRIANGLES, 0, 6);
         }
 
         function createShader(gl, type, source) {
