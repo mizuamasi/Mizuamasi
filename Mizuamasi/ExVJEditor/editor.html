@@ -37,14 +37,14 @@
     </button>
     
     <!-- コード保存ボタン -->
-    <button id="save-btn" title="コードを保存">
+    <!-- <button id="save-btn" title="コードを保存">
       <i class="fas fa-save"></i>
-    </button>
+    </button> -->
     
     <!-- コード読み込みボタン -->
-    <button id="load-btn" title="コードを読み込む">
+    <!-- <button id="load-btn" title="コードを読み込む">
       <i class="fas fa-folder-open"></i>
-    </button>
+    </button> -->
     
     <!-- ポップアップ表示ボタン -->
     <button id="popup-btn" title="ポップアップ表示">
@@ -71,11 +71,13 @@
   <!-- メインコンテナ -->
   <div id="main-container" class="hidden">
     <!-- レンダリングキャンバス -->
-    <canvas id="render-canvas"></canvas>
+    
     
     <!-- エディターコンテナ -->
     <div id="editor-container">
+      
       <textarea id="shader-code"></textarea>
+      <canvas id="render-canvas"></canvas>
     </div>
     
     <!-- コンソールコンテナ -->

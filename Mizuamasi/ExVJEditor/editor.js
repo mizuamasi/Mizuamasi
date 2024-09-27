@@ -42,10 +42,11 @@ window.onload = function() {
       startTrackingUsage();
       updateTrackingStatus(true);
     }
-  } else {
-    alert('認証されていません。index.htmlに戻ります。');
-    window.location.href = 'index.html';
   }
+  //  else {
+  //   alert('認証されていません。ログイン画面に戻ります。');
+  //   window.location.href = 'login.html'; // 'index.html' から 'login.html' に変更
+  // }
   
   // キャンバス解像度設定イベントリスナー
   const setResolutionBtn = document.getElementById('set-resolution-btn');
@@ -169,8 +170,8 @@ void main() {
     program = newProgram;
     lastValidProgram = newProgram;
     render();
-    // コードを保存
-   // saveCodeToLocalStorage();
+    // 自動保存を削除
+    // saveCodeToLocalStorage(); // ここをコメントアウトまたは削除
   } else {
     if (lastValidProgram) {
       program = lastValidProgram;
@@ -219,7 +220,7 @@ function createProgram(vs, fs) {
  * ポップアップへのレンダリング結果送信を最適化
  */
 let lastPopupUpdate = 0;
-const popupUpdateInterval = 40; // 1秒ごとに送信
+const popupUpdateInterval = 1000; // 1秒ごとに送信
 
 function render() {
   if (!program) return;
@@ -357,11 +358,11 @@ async function startMicrophone(deviceId) {
   }
 
   try {
-    // マイクの設定を自動でモノラルとステレオの両方を取得するように設定
+    // マイクの設定を適切に設定
     microphoneStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         deviceId: deviceId,
-        channelCount: { ideal: 2 }, // ステレオを優先
+        channelCount: 2, // ステレオ
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true
@@ -371,8 +372,8 @@ async function startMicrophone(deviceId) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const source = audioContext.createMediaStreamSource(microphoneStream);
     analyser = audioContext.createAnalyser();
-    source.connect(analyser);
     analyser.fftSize = 2048;
+    source.connect(analyser);
     const bufferLength = analyser.frequencyBinCount;
     audioDataArray = new Uint8Array(bufferLength);
 
@@ -396,7 +397,7 @@ function createAudioTexture() {
     gl.TEXTURE_2D,
     0,
     gl.RGBA,
-    audioDataArray.length,
+    audioDataArray.length / 4, // テクスチャの幅を調整
     1,
     0,
     gl.RGBA,
@@ -412,17 +413,27 @@ function updateAudioTexture() {
   if (analyser && audioDataArray) {
     analyser.getByteFrequencyData(audioDataArray);
 
+    // RGBAフォーマットに変換
+    const rgbaData = new Uint8Array(audioDataArray.length * 4);
+    for (let i = 0; i < audioDataArray.length; i++) {
+      const value = audioDataArray[i];
+      rgbaData[i * 4] = value;     // R
+      rgbaData[i * 4 + 1] = value; // G
+      rgbaData[i * 4 + 2] = value; // B
+      rgbaData[i * 4 + 3] = 255;   // A
+    }
+
     gl.bindTexture(gl.TEXTURE_2D, audioTexture);
     gl.texSubImage2D(
       gl.TEXTURE_2D,
       0,
       0,
       0,
-      audioDataArray.length,
+      audioDataArray.length / 4, // テクスチャの幅
       1,
       gl.RGBA,
       gl.UNSIGNED_BYTE,
-      audioDataArray
+      rgbaData
     );
   }
 }

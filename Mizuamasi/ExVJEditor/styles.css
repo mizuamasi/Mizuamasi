@@ -168,8 +168,8 @@ body {
 #editor-container {
   position: relative;
   width: 100%;
-  height: 50%;
-  background-color: rgba(0, 0, 0, 0.8); /* 半透明 */
+  height: 100%;
+  background-color: transparent; /* 半透明 */
   z-index: 2;
   overflow: auto;
 }
@@ -182,7 +182,7 @@ body {
 #render-canvas {
   position: relative;
   width: 100%;
-  height: 50%;
+  height: 90%;
   z-index: 1;
 }
 
@@ -268,12 +268,18 @@ body {
 /* CodeMirrorのスタイル */
 .CodeMirror {
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.8) !important; /* エディター背景を透過 */
+  background-color: rgba(0, 0, 0, 0) !important; /* エディター背景を透過 */
   color: #fff;
   font-size: 14px;
   position: relative;
   z-index: 4;
 }
+
+.shader-code{
+  background-color: rgba(0, 0, 0, 0) !important; /* エディター背景を透過 */
+}
+
+
 
 /* シンタックスハイライトの修正 */
 .cm-s-dracula .cm-keyword { color: #ff79c6; }
@@ -296,7 +302,7 @@ body {
   }
 
   #editor-container {
-    height: 60%; /* ツールバーの高さ調整 */
+    height: 100%; /* ツールバーの高さ調整 */
   }
 
   #render-canvas {
