@@ -58,10 +58,11 @@ window.onload = function() {
 /**
  * エディターの初期化
  */
+
 function initializeEditor() {
   editor = CodeMirror.fromTextArea(document.getElementById('shader-code'), {
     mode: 'x-shader/x-fragment',
-    theme: 'dracula',
+    //theme: 'dracula',
     lineNumbers: true,
     matchBrackets: true,
     autofocus: true
@@ -113,7 +114,7 @@ function compileShader() {
 
   // #version が存在しない場合、#version 300 es を追加
   if (!/^#version\s+\d+\s+\w+/.test(shaderSource)) {
-    shaderSource = '#version 300 es\n' + shaderSource;
+    shaderSource = '#version 300 es\n\n\n\n' + shaderSource;
   }
 
   // WebGL 2.0では出力変数を宣言する必要があります

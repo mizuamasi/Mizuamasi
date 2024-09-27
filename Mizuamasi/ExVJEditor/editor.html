@@ -57,6 +57,8 @@
         <option value="">サンプルを選択</option>
         <option value="SampleCode/sample1.frag">Sample 1</option>
         <option value="SampleCode/sample2.frag">Sample 2</option>
+        <option value="SampleCode/sample3.frag">マイクスペクトラム</option>
+        <option value="SampleCode/sample4.frag">マイク波形</option>
       </select>
       <select id="microphone-select" title="マイクを選択">
         <option value="">マイクを選択</option>
@@ -70,16 +72,14 @@
 
   <!-- メインコンテナ -->
   <div id="main-container" class="hidden">
-    <!-- レンダリングキャンバス -->
-    
-    
     <!-- エディターコンテナ -->
     <div id="editor-container">
       
       <textarea id="shader-code"></textarea>
-      <canvas id="render-canvas"></canvas>
     </div>
     
+    <!-- レンダリングキャンバス -->
+    <canvas id="render-canvas"></canvas>
     <!-- コンソールコンテナ -->
     <div id="console-container">
       <div id="console-output"></div>
