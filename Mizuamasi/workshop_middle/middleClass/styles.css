@@ -1,0 +1,48 @@
+/* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.section {
+    margin-bottom: 40px;
+}
+
+#shader-demo {
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+}
+
+#shader-demo canvas {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.resolution-control {
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+}
+
+#resolution-slider {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+#resolution-value {
+    font-family: monospace;
+    min-width: 120px;
+}
+
+#editor {
+    width: 100%;
+    height: 300px;
+    margin-top: 20px;
+}
