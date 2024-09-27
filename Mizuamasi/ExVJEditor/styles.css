@@ -39,6 +39,8 @@ body {
   border: none;
   color: #fff;
   cursor: pointer;
+  border-radius: 4px;
+  position: relative;
 }
 
 #auth-buttons button:hover {
@@ -52,6 +54,8 @@ body {
   padding: 10px;
   border: none;
   cursor: pointer;
+  border-radius: 4px;
+  position: relative;
 }
 
 #continue-without-tracking-btn:hover {
@@ -101,10 +105,20 @@ body {
   margin-right: 10px;
   cursor: pointer;
   font-size: 18px;
+  position: relative;
 }
 
-#toolbar button:hover {
-  color: #00f;
+#toolbar button:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
 }
 
 #toolbar .toolbar-right {
@@ -151,6 +165,10 @@ body {
   overflow: auto;
 }
 
+#editor-container.hidden {
+  display: none;
+}
+
 /* コンソールコンテナ */
 #console-container {
   position: absolute;
@@ -169,34 +187,7 @@ body {
   padding: 10px;
 }
 
-/* コントロールパネル */
-#control-container {
-  position: absolute;
-  top: 40px;
-  right: 0;
-  width: 300px;
-  height: calc(100% - 40px);
-  background-color: #222;
-  padding: 10px;
-  overflow-y: auto;
-  z-index: 4;
-}
-
-#control-container h2 {
-  margin-top: 20px;
-  margin-bottom: 10px;
-}
-
-#uniform-controls label {
-  display: block;
-  margin-top: 10px;
-  font-weight: bold;
-}
-
-#uniform-controls input[type="range"] {
-  width: 100%;
-  margin: 5px 0 15px 0;
-}
+/* ユニフォームコントロールは削除 */
 
 /* ロードモーダルのスタイル */
 .modal {
@@ -262,9 +253,11 @@ body {
 /* CodeMirrorのスタイル */
 .CodeMirror {
   height: 100%;
-  background-color: transparent !important; /* 背景を透過 */
+  background-color: rgba(0, 0, 0, 0.8) !important; /* エディター背景を透過 */
   color: #fff;
   font-size: 14px;
+  position: relative;
+  z-index: 4;
 }
 
 /* シンタックスハイライトの修正 */
@@ -277,15 +270,19 @@ body {
 
 /* レスポンシブ調整 */
 @media (max-width: 768px) {
-  #control-container {
-    width: 100%;
-    height: 200px;
-    bottom: 0;
-    top: unset;
-    right: unset;
+  #toolbar {
+    flex-wrap: wrap;
+  }
+
+  #toolbar select {
+    margin-bottom: 5px;
   }
 
   #editor-container {
-    height: calc(100% - 240px); /* ツールバー + コントロールパネル */
+    height: calc(100% - 100px); /* ツールバーの高さ調整 */
+  }
+
+  #console-container {
+    max-height: 150px;
   }
 }

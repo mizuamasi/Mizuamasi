@@ -3,11 +3,11 @@
 let editor;
 let gl;
 let program;
-let uniforms = {};
 let lastValidProgram = null;
-let canvasWidth = 1920;
-let canvasHeight = 1080;
+let canvasWidth = window.innerWidth;
+let canvasHeight = window.innerHeight;
 let isEditorVisible = true;
+let isTracking = true;
 
 let audioContext;
 let analyser;
@@ -22,7 +22,6 @@ let mouseX = 0.0;
 let mouseY = 0.0;
 let mousePressed = false;
 
-// 最大画面解像度を取得
 const maxResolution = {
   width: window.screen.width,
   height: window.screen.height
@@ -32,23 +31,19 @@ window.onload = function() {
   initializeEditor();
   initializeGL();
   setupEventListeners();
-  setupLoadModal();
-  loadSavedCode();
+  loadCode();
   getMicrophoneDevices();
   
-  // ログインセッションの確認
   const session = JSON.parse(localStorage.getItem('session'));
   if (session && session.isLoggedIn) {
     startTrackingUsage();
     showMainContainer();
+    updateTrackingStatus(true);
   } else {
-    // 認証画面を表示
-    document.getElementById('auth-container').style.display = 'block';
-    document.getElementById('main-container').style.display = 'none';
+    // auth-container が存在しない場合は無視
+    showMainContainer(); // 認証がない場合は直接メインコンテナを表示
+    updateTrackingStatus(false);
   }
-  
-  // サンプルコードの自動読み込み
-  loadSampleCodeFromURL('SampleCode/sample1.frag');
 };
 
 /**
@@ -78,7 +73,6 @@ function initializeGL() {
   }
   resizeCanvas();
 
-  // マウスイベントの設定
   canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     mouseX = e.clientX - rect.left;
@@ -92,6 +86,9 @@ function initializeGL() {
   canvas.addEventListener('mouseup', () => {
     mousePressed = false;
   });
+
+  // エディターの背景にWebGLレンダリング結果を設定
+  render(); // 初期レンダリング
 }
 
 /**
@@ -100,52 +97,45 @@ function initializeGL() {
 function compileShader() {
   let shaderSource = editor.getValue();
 
-  // main関数の自動挿入とインストルメントを一度だけ実行する
-  if (!shaderSource.includes('// [INJECTED CODE START]')) {
-    // GLSLバージョン指定を追加
-    shaderSource = `#version 300 es
-precision mediump float;
-${shaderSource}`;
-
-    // print関数のインストルメントを追加
-    shaderSource = injectPrintFunction(shaderSource);
-
-    // main関数の自動挿入
-    if (!/void\s+main\s*\(/.test(shaderSource)) {
-      shaderSource += `
-
-void main() {
-  vec2 fragCoord = gl_FragCoord.xy;
-  mainImage(fragColor, fragCoord);
-}`;
-    }
+  // 精度宣言が存在しない場合、追加する
+  if (!/precision\s+mediump\s+float\s*;/.test(shaderSource)) {
+    shaderSource = 'precision mediump float;\n' + shaderSource;
   }
 
+  // シェーダー内に main 関数が存在するか確認
+  const hasMain = /void\s+main\s*\(/.test(shaderSource);
+
+  if (!hasMain) {
+    // main 関数が存在しない場合、mainImage を呼び出す main 関数を追加
+    shaderSource += `
+void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+}
+`;
+  }
+
+  document.getElementById('console-output').innerText = '';
+
   const vertexShaderSource = `#version 300 es
-precision mediump float;
+precision highp float;
 layout(location = 0) in vec2 position;
 void main() {
   gl_Position = vec4(position, 0.0, 1.0);
 }`;
 
-  // エラーメッセージをクリア
-  document.getElementById('console-output').innerText = '';
-
-  // シェーダーのコンパイルとエラーチェック
   const vertexShader = createShader(gl.VERTEX_SHADER, vertexShaderSource);
   const fragmentShader = createShader(gl.FRAGMENT_SHADER, shaderSource);
 
   if (!vertexShader || !fragmentShader) return;
 
-  // プログラムのリンク
   const newProgram = createProgram(vertexShader, fragmentShader);
   if (newProgram) {
     program = newProgram;
     lastValidProgram = newProgram;
-    extractUniforms(shaderSource);
     render();
+    // コードを保存
+    saveCodeToLocalStorage();
   } else {
-    // エラーがある場合は最後に成功したプログラムを使用
     if (lastValidProgram) {
       program = lastValidProgram;
       render();
@@ -189,157 +179,6 @@ function createProgram(vs, fs) {
 }
 
 /**
- * GLSLコード内のprint関数をインストルメント
- */
-function injectPrintFunction(shaderSource) {
-  // 既にインストルメントされている場合は何もしない
-  if (shaderSource.includes('// [INJECTED CODE START]')) {
-    return shaderSource;
-  }
-
-  // インストルメントコードの挿入
-  const printFunction = `
-// [INJECTED CODE START]
-out vec4 fragColor;
-vec4 printValues[10];
-int printCount = 0;
-
-void print(float value) {
-  if (printCount < 10) {
-    printValues[printCount] = vec4(value, 0.0, 0.0, 0.0);
-    printCount++;
-  }
-}
-
-void print(vec2 value) {
-  if (printCount < 10) {
-    printValues[printCount] = vec4(value, 0.0, 0.0);
-    printCount++;
-  }
-}
-
-void print(vec3 value) {
-  if (printCount < 10) {
-    printValues[printCount] = vec4(value, 0.0);
-    printCount++;
-  }
-}
-
-void print(vec4 value) {
-  if (printCount < 10) {
-    printValues[printCount] = value;
-    printCount++;
-  }
-}
-
-void print(float value, vec2 coord) {
-  if (distance(gl_FragCoord.xy, coord) < 1.0 && printCount < 10) {
-    printValues[printCount] = vec4(value, 0.0, 0.0, 0.0);
-    printCount++;
-  }
-}
-
-void print(vec2 value, vec2 coord) {
-  if (distance(gl_FragCoord.xy, coord) < 1.0 && printCount < 10) {
-    printValues[printCount] = vec4(value, 0.0, 0.0);
-    printCount++;
-  }
-}
-
-void print(vec3 value, vec2 coord) {
-  if (distance(gl_FragCoord.xy, coord) < 1.0 && printCount < 10) {
-    printValues[printCount] = vec4(value, 0.0);
-    printCount++;
-  }
-}
-
-void print(vec4 value, vec2 coord) {
-  if (distance(gl_FragCoord.xy, coord) < 1.0 && printCount < 10) {
-    printValues[printCount] = value;
-    printCount++;
-  }
-}
-
-// user_mainImage関数の宣言
-void user_mainImage(out vec4 fragColor, in vec2 fragCoord);
-
-// main関数の定義
-void main() {
-  printCount = 0; // 毎フレームリセット
-  user_mainImage(fragColor, fragCoord.xy);
-
-  // printValuesをfragColorに追加
-  for(int i = 0; i < 10; i++) {
-    fragColor += printValues[i];
-  }
-}
-// [INJECTED CODE END]
-`;
-
-  shaderSource = shaderSource.replace(/void\s+mainImage\s*\(/, `${printFunction}\nvoid user_mainImage(`);
-
-  return shaderSource;
-}
-
-/**
- * Uniform変数を抽出
- */
-function extractUniforms(shaderSource) {
-  const regex = /uniform\s+(float|vec[234])\s+(\w+);(?:\s*\/\/\s*option\s*(\{[^}]*\}))?/g;
-  let match;
-  uniforms = {};
-  const controlContainer = document.getElementById('uniform-controls');
-  controlContainer.innerHTML = '';
-
-  while ((match = regex.exec(shaderSource)) !== null) {
-    const type = match[1];
-    const name = match[2];
-    const options = match[3] ? JSON.parse(match[3]) : {};
-    uniforms[name] = {
-      type: type,
-      value: getDefaultUniformValue(type),
-      options: options
-    };
-    createUniformControl(name, type, options);
-  }
-}
-
-/**
- * Uniform変数のデフォルト値を取得
- */
-function getDefaultUniformValue(type) {
-  const size = parseInt(type.slice(-1)) || 1;
-  return Array(size).fill(0.0);
-}
-
-/**
- * Uniformコントロールの作成
- */
-function createUniformControl(name, type, options) {
-  const controlContainer = document.getElementById('uniform-controls');
-  
-  const label = document.createElement('label');
-  label.innerText = name;
-  controlContainer.appendChild(label);
-
-  const size = parseInt(type.slice(-1)) || 1;
-  for (let i = 0; i < size; i++) {
-    const input = document.createElement('input');
-    input.type = 'range';
-    input.min = options.min !== undefined ? options.min : -1;
-    input.max = options.max !== undefined ? options.max : 1;
-    input.step = options.step !== undefined ? options.step : 0.0001;
-    input.value = uniforms[name].value[i];
-    input.title = `${name}.${i+1}`;
-    input.oninput = function() {
-      uniforms[name].value[i] = parseFloat(this.value);
-      render();
-    };
-    controlContainer.appendChild(input);
-  }
-}
-
-/**
  * レンダリング関数
  */
 function render() {
@@ -349,7 +188,6 @@ function render() {
 
   gl.useProgram(program);
 
-  // 頂点バッファの設定
   const positionAttributeLocation = gl.getAttribLocation(program, 'position');
   const positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -365,44 +203,37 @@ function render() {
   gl.enableVertexAttribArray(positionAttributeLocation);
   gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
-  // Uniform変数の設定
-  for (const name in uniforms) {
-    const location = gl.getUniformLocation(program, name);
-    const value = uniforms[name].value;
-    const type = uniforms[name].type;
-    if (type === 'float') {
-      gl.uniform1f(location, value[0]);
-    } else if (type === 'vec2') {
-      gl.uniform2fv(location, value);
-    } else if (type === 'vec3') {
-      gl.uniform3fv(location, value);
-    } else if (type === 'vec4') {
-      gl.uniform4fv(location, value);
-    }
-  }
-
-  // 組み込みUniformの設定
   setBuiltInUniforms();
 
-  // オーディオテクスチャUniformの設定
   setAudioTextureUniform();
 
-  // 描画
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  gl.clearColor(0, 0, 0, 1); // 黒でクリア
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-  // printValuesの取得とコンソール出力
-  readPrintValues();
+  // WebGLレンダリング結果をエディターの背景に設定
+  setEditorBackground();
 
   requestAnimationFrame(render);
 
-  // ポップアップへの送信
   if (popupWindow && !popupWindow.closed) {
-    // レンダリング結果を画像として取得
     const dataURL = gl.canvas.toDataURL();
     popupWindow.postMessage({ type: 'renderResult', data: dataURL }, '*');
   }
+}
+
+/**
+ * エディターの背景にWebGLレンダリング結果を設定
+ */
+function setEditorBackground() {
+  const canvas = document.getElementById('render-canvas');
+  const dataURL = canvas.toDataURL();
+  const editorContainer = document.getElementById('editor-container');
+  editorContainer.style.backgroundImage = `url(${dataURL})`;
+  editorContainer.style.backgroundSize = 'cover';
+  editorContainer.style.backgroundRepeat = 'no-repeat';
+  editorContainer.style.backgroundPosition = 'center';
 }
 
 /**
@@ -440,37 +271,6 @@ function setAudioTextureUniform() {
 }
 
 /**
- * printValuesの取得とコンソール出力
- */
-function readPrintValues() {
-  // マウス位置のピクセルを取得
-  const x = Math.floor(mouseX);
-  const y = Math.floor(mouseY);
-
-  // ピクセルがキャンバス範囲内か確認
-  if (x < 0 || x >= gl.canvas.width || y < 0 || y >= gl.canvas.height) {
-    return;
-  }
-
-  // フロートテクスチャを有効にする必要があるため、WebGL2のみ対応
-  if (!gl.getExtension('EXT_color_buffer_float')) {
-    console.warn('EXT_color_buffer_floatがサポートされていません。print機能が無効です。');
-    return;
-  }
-
-  const pixels = new Float32Array(4);
-  gl.readPixels(x, y, 1, 1, gl.RGBA, gl.FLOAT, pixels);
-
-  const r = pixels[0];
-  const g = pixels[1];
-  const b = pixels[2];
-  const a = pixels[3];
-
-  const consoleOutput = document.getElementById('console-output');
-  consoleOutput.innerText = `値: ${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)}, ${a.toFixed(2)}`;
-}
-
-/**
  * マイク入力の処理
  */
 async function getMicrophoneDevices() {
@@ -499,8 +299,7 @@ async function getMicrophoneDevices() {
 /**
  * マイクの開始
  */
-async function startMicrophone() {
-  const deviceId = document.getElementById('microphone-select').value;
+async function startMicrophone(deviceId) {
   if (!deviceId) return;
 
   if (microphoneStream) {
@@ -523,8 +322,10 @@ async function startMicrophone() {
     audioDataArray = new Uint8Array(bufferLength);
 
     createAudioTexture();
+    updateMicrophoneStatus(true);
   } catch (err) {
     console.error('マイクへのアクセスが拒否されました。', err);
+    updateMicrophoneStatus(false);
   }
 }
 
@@ -539,11 +340,11 @@ function createAudioTexture() {
   gl.texImage2D(
     gl.TEXTURE_2D,
     0,
-    gl.LUMINANCE,
+    gl.RGBA,
     audioDataArray.length,
     1,
     0,
-    gl.LUMINANCE,
+    gl.RGBA,
     gl.UNSIGNED_BYTE,
     null
   );
@@ -564,7 +365,7 @@ function updateAudioTexture() {
       0,
       audioDataArray.length,
       1,
-      gl.LUMINANCE,
+      gl.RGBA,
       gl.UNSIGNED_BYTE,
       audioDataArray
     );
@@ -576,15 +377,14 @@ function updateAudioTexture() {
  */
 function startTrackingUsage() {
   setInterval(() => {
-    const session = JSON.parse(localStorage.getItem('session'));
-    if (!session || !session.isLoggedIn) return;
+    if (!isTracking) return;
 
     const usageTime = 300; // 5分（300秒）
     const updateCount = 1; // 1回の更新
 
     const data = new URLSearchParams();
     data.append('action', 'updateUsage');
-    data.append('nickname', session.nickname);
+    data.append('nickname', localStorage.getItem('nickname') || 'unknown');
     data.append('usageTime', usageTime);
     data.append('updateCount', updateCount);
 
@@ -599,6 +399,10 @@ function startTrackingUsage() {
     .then(result => {
       if (result.success) {
         console.log('使用時間トラッキング成功:', result.message);
+        // 累計時間をローカルストレージに保存
+        let cumulative = parseInt(localStorage.getItem('cumulativeUsage') || '0');
+        cumulative += usageTime;
+        localStorage.setItem('cumulativeUsage', cumulative);
       } else {
         console.error('使用時間トラッキング失敗:', result.message);
       }
@@ -617,14 +421,13 @@ function setupEventListeners() {
   const loadBtn = document.getElementById('load-btn');
   const loadSavedBtn = document.getElementById('load-saved-btn');
   const popupBtn = document.getElementById('popup-btn');
-  const applyResolutionBtn = document.getElementById('apply-resolution-btn');
   const toggleEditorBtn = document.getElementById('toggle-editor-btn');
   const microphoneSelect = document.getElementById('microphone-select');
   const sampleSelect = document.getElementById('sample-select');
-  const continueWithoutTrackingBtn = document.getElementById('continue-without-tracking-btn');
-
+  const micToggleBtn = document.getElementById('mic-toggle-btn');
+  
   if (saveBtn) {
-    saveBtn.addEventListener('click', saveCode);
+    saveBtn.addEventListener('click', saveCodeToLocalStorage);
   }
 
   if (loadBtn) {
@@ -643,31 +446,22 @@ function setupEventListeners() {
     popupBtn.addEventListener('click', openPopup);
   }
 
-  if (applyResolutionBtn) {
-    applyResolutionBtn.addEventListener('click', applyResolution);
-  }
-
   if (toggleEditorBtn) {
     toggleEditorBtn.addEventListener('click', toggleEditor);
   }
 
   if (microphoneSelect) {
-    microphoneSelect.addEventListener('change', startMicrophone);
+    microphoneSelect.addEventListener('change', (e) => {
+      startMicrophone(e.target.value);
+    });
   }
 
   if (sampleSelect) {
     sampleSelect.addEventListener('change', loadSampleCode);
   }
 
-  if (continueWithoutTrackingBtn) {
-    continueWithoutTrackingBtn.addEventListener('click', () => {
-      // ログイン画面を非表示にしてエディターを表示
-      document.getElementById('auth-container').style.display = 'none';
-      showMainContainer();
-
-      // トラッキングを無効化
-      localStorage.removeItem('session');
-    });
+  if (micToggleBtn) {
+    micToggleBtn.addEventListener('click', toggleMicrophone);
   }
 
   // モーダルの閉じるボタン設定
@@ -691,19 +485,14 @@ function setupEventListeners() {
  * サンプルコードの読み込み
  */
 async function loadSampleCode() {
-  const sampleSelect = document.getElementById('sample-select');
-  const selectedSample = sampleSelect.value;
-
-  if (selectedSample === '') return;
-
   try {
-    const response = await fetch(selectedSample);
+    const response = await fetch('SampleCode/sample1.frag');
     if (!response.ok) {
       throw new Error(`サンプルコードの読み込みに失敗しました: ${response.statusText}`);
     }
     const shaderCode = await response.text();
     editor.setValue(shaderCode);
-    alert('サンプルコードが読み込まれました。');
+    compileShader(); // シェーダーをコンパイル
   } catch (error) {
     console.error('サンプルコード読み込みエラー:', error);
     alert('サンプルコードの読み込み中にエラーが発生しました。');
@@ -711,48 +500,25 @@ async function loadSampleCode() {
 }
 
 /**
- * 指定されたURLからサンプルコードを読み込む
- * @param {string} url - サンプルコードのURL
+ * ブラウザキャッシュからコードをロードする関数
  */
-async function loadSampleCodeFromURL(url) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`サンプルコードの読み込みに失敗しました: ${response.statusText}`);
-    }
-    const shaderCode = await response.text();
-    editor.setValue(shaderCode);
-    alert(`サンプルコード「${url}」が自動的に読み込まれました。`);
-  } catch (error) {
-    console.error('サンプルコード読み込みエラー:', error);
-    alert('サンプルコードの読み込み中にエラーが発生しました。');
+function loadCode() {
+  const savedCode = localStorage.getItem('savedCode');
+  if (savedCode) {
+    editor.setValue(savedCode);
+    compileShader(); // シェーダーをコンパイル
+  } else {
+    loadSampleCode();
   }
 }
 
 /**
- * コードの保存
+ * コードの保存（localStorage）
  */
-function saveCode() {
+function saveCodeToLocalStorage() {
   const code = editor.getValue();
-  const codeName = prompt('保存するコードの名前を入力してください:', 'MyShader');
-
-  if (codeName === null) {
-    // ユーザーがキャンセルした場合
-    return;
-  }
-
-  const trimmedName = codeName.trim();
-  if (trimmedName === '') {
-    alert('コード名を入力してください。');
-    return;
-  }
-
-  // 保存
-  localStorage.setItem(`shader_${trimmedName}`, code);
-  alert(`コード「${trimmedName}」が保存されました。`);
-
-  // 保存リストを更新
-  updateSavedShadersList();
+  localStorage.setItem('savedCode', code);
+  alert('コードが保存されました。');
 }
 
 /**
@@ -788,30 +554,12 @@ function loadSavedCodeFromList() {
   const code = localStorage.getItem(selectedKey);
   if (code) {
     editor.setValue(code);
+    compileShader(); // シェーダーをコンパイル
     alert(`コード「${selectedKey.replace('shader_', '')}」がロードされました。`);
     document.getElementById('load-modal').classList.add('hidden');
   } else {
     alert('選択されたコードが見つかりません。');
   }
-}
-
-/**
- * ロードモーダルの設定
- */
-function setupLoadModal() {
-  const modal = document.getElementById('load-modal');
-  const closeBtn = modal.querySelector('.close');
-
-  closeBtn.addEventListener('click', () => {
-    modal.classList.add('hidden');
-  });
-
-  // モーダル外クリックで閉じる
-  window.addEventListener('click', (event) => {
-    if (event.target == modal) {
-      modal.classList.add('hidden');
-    }
-  });
 }
 
 /**
@@ -825,7 +573,6 @@ function openPopup() {
 
   popupWindow = window.open('', 'popupWindow', `width=${maxResolution.width},height=${maxResolution.height}`);
 
-  // ポップアップウィンドウにHTMLを挿入
   popupWindow.document.write(`
     <!DOCTYPE html>
     <html lang="ja">
@@ -851,7 +598,6 @@ function openPopup() {
     </html>
   `);
 
-  // ポップアップの解像度に合わせてエディターの解像度も調整
   canvasWidth = maxResolution.width;
   canvasHeight = maxResolution.height;
   resizeCanvas();
@@ -859,25 +605,6 @@ function openPopup() {
 
 /**
  * 解像度の適用
- */
-function applyResolution() {
-  const widthInput = document.getElementById('resolution-width');
-  const heightInput = document.getElementById('resolution-height');
-  const newWidth = parseInt(widthInput.value);
-  const newHeight = parseInt(heightInput.value);
-
-  if (isNaN(newWidth) || isNaN(newHeight) || newWidth <= 0 || newHeight <= 0) {
-    alert('有効な解像度を入力してください。');
-    return;
-  }
-
-  canvasWidth = newWidth;
-  canvasHeight = newHeight;
-  resizeCanvas();
-}
-
-/**
- * キャンバスのリサイズ
  */
 function resizeCanvas() {
   const canvas = document.getElementById('render-canvas');
@@ -896,9 +623,11 @@ function toggleEditor() {
   if (isEditorVisible) {
     editorContainer.classList.remove('hidden');
     consoleContainer.classList.remove('hidden');
+    document.getElementById('toggle-editor-btn').innerHTML = '<i class="fas fa-code"></i>';
   } else {
     editorContainer.classList.add('hidden');
     consoleContainer.classList.add('hidden');
+    document.getElementById('toggle-editor-btn').innerHTML = '<i class="fas fa-code-slash"></i>';
   }
 }
 
@@ -921,83 +650,71 @@ function debounce(func, wait) {
 }
 
 /**
- * ポップアップでのレンダリング結果の受信（不要な場合は削除可）
+ * トラッキング状態の更新
  */
-// この部分は不要です。ポップアップ側で処理します。
+function updateTrackingStatus(status) {
+  const trackingIndicator = document.getElementById('tracking-status');
+  if (status) {
+    trackingIndicator.innerHTML = '<i class="fas fa-eye"></i> トラッキング: ON';
+    trackingIndicator.style.color = 'green';
+  } else {
+    trackingIndicator.innerHTML = '<i class="fas fa-eye-slash"></i> トラッキング: OFF';
+    trackingIndicator.style.color = 'red';
+  }
+}
 
 /**
- * printValuesの取得とコンソール出力
+ * マイクのオンオフ切り替え
  */
-function readPrintValues() {
-  // マウス位置のピクセルを取得
-  const x = Math.floor(mouseX);
-  const y = Math.floor(mouseY);
-
-  // ピクセルがキャンバス範囲内か確認
-  if (x < 0 || x >= gl.canvas.width || y < 0 || y >= gl.canvas.height) {
-    return;
+function toggleMicrophone() {
+  if (microphoneStream) {
+    microphoneStream.getTracks().forEach(track => track.stop());
+    microphoneStream = null;
+    analyser = null;
+    audioDataArray = null;
+    audioTexture = null;
+    updateMicrophoneStatus(false);
+  } else {
+    const deviceId = document.getElementById('microphone-select').value;
+    if (!deviceId) {
+      alert('マイクを選択してください。');
+      return;
+    }
+    startMicrophone(deviceId);
+    updateMicrophoneStatus(true);
   }
+}
 
-  // フロートテクスチャを有効にする必要があるため、WebGL2のみ対応
-  if (!gl.getExtension('EXT_color_buffer_float')) {
-    console.warn('EXT_color_buffer_floatがサポートされていません。print機能が無効です。');
-    return;
+/**
+ * マイク状態の更新
+ */
+function updateMicrophoneStatus(status) {
+  const micIndicator = document.getElementById('mic-status');
+  const micToggleBtn = document.getElementById('mic-toggle-btn');
+  if (status) {
+    micIndicator.innerHTML = '<i class="fas fa-microphone"></i> マイク: ON';
+    micIndicator.style.color = 'green';
+    micToggleBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+    micToggleBtn.style.backgroundColor = '#28a745';
+    micToggleBtn.style.borderRadius = '4px';
+    micToggleBtn.style.padding = '5px';
+  } else {
+    micIndicator.innerHTML = '<i class="fas fa-microphone-slash"></i> マイク: OFF';
+    micIndicator.style.color = 'red';
+    micToggleBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+    micToggleBtn.style.backgroundColor = '#dc3545';
+    micToggleBtn.style.borderRadius = '4px';
+    micToggleBtn.style.padding = '5px';
   }
-
-  const pixels = new Float32Array(4);
-  gl.readPixels(x, y, 1, 1, gl.RGBA, gl.FLOAT, pixels);
-
-  const r = pixels[0];
-  const g = pixels[1];
-  const b = pixels[2];
-  const a = pixels[3];
-
-  const consoleOutput = document.getElementById('console-output');
-  consoleOutput.innerText = `値: ${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)}, ${a.toFixed(2)}`;
 }
 
 /**
  * コントロールコンテナの表示
+ * 現在の editor.html には auth-container が存在しないため、この関数はメインコンテナを表示するだけです
  */
 function showMainContainer() {
-  document.getElementById('auth-container').style.display = 'none';
-  document.getElementById('main-container').classList.remove('hidden');
-}
-
-/**
- * 使用時間のトラッキング開始
- */
-function startTrackingUsage() {
-  setInterval(() => {
-    const session = JSON.parse(localStorage.getItem('session'));
-    if (!session || !session.isLoggedIn) return;
-
-    const usageTime = 300; // 5分（300秒）
-    const updateCount = 1; // 1回の更新
-
-    const data = new URLSearchParams();
-    data.append('action', 'updateUsage');
-    data.append('nickname', session.nickname);
-    data.append('usageTime', usageTime);
-    data.append('updateCount', updateCount);
-
-    fetch('https://script.google.com/macros/s/AKfycbynrTZxEGbsEYWQSPzYlhV2VRW42krn2kwr6T74uJ0V7biEKbPcgE50B6mBX4LkyHBblw/exec', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: data.toString()
-    })
-    .then(response => response.json())
-    .then(result => {
-      if (result.success) {
-        console.log('使用時間トラッキング成功:', result.message);
-      } else {
-        console.error('使用時間トラッキング失敗:', result.message);
-      }
-    })
-    .catch(error => {
-      console.error('使用時間トラッキングエラー:', error);
-    });
-});
+  const mainContainer = document.getElementById('main-container');
+  if (mainContainer) {
+    mainContainer.classList.remove('hidden');
+  }
 }

@@ -1,28 +1,20 @@
-// SampleCode/sample2.frag
-
-precision mediump float;
-
+// sample2.frag
 uniform vec3 iResolution;
 uniform float iTime;
 uniform vec2 iMouse;
 
 // mainImage関数の定義
-void mainImage(out vec4 fragColor, in vec2 fragCoord)
-{
-    // Center coordinates
-    vec2 center = iResolution.xy / 2.0;
-    
-    // Calculate distance from center
-    float dist = distance(fragCoord, center);
-    
-    // Create a radial gradient
-    float gradient = 1.0 - smoothstep(0.0, iResolution.x / 2.0, dist);
-    
-    // Apply time-based color change
-    vec3 color = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), gradient * 0.5 * (1.0 + sin(iTime)));
-
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    // ピクセルの座標を0から1の範囲に正規化
+    vec2 uv = fragCoord / iResolution.xy;
+    // 時間と座標に基づいて動く円を描画
+    float radius = 0.3;
+    vec2 center = vec2(0.5 + 0.3 * sin(iTime), 0.5 + 0.3 * cos(iTime));
+    float dist = distance(uv, center);
+    vec3 color = mix(vec3(0.0), vec3(1.0), smoothstep(radius, radius - 0.01, dist));
     fragColor = vec4(color, 1.0);
+}
 
-    // ピクセルの色値をコンソールに表示
-    print(color, fragCoord);
+void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
 }

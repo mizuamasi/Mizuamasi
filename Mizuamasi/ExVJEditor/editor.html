@@ -1,88 +1,106 @@
+<!-- editor.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
   <title>シェーダーエディター</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
+  
+  <!-- CodeMirrorのCSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+  
+  <!-- Font Awesomeの読み込み -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <!-- 上部ツールバー -->
   <div id="toolbar">
-    <button id="save-btn">保存</button>
-    <button id="load-btn">読み出し</button>
-    <button id="toggle-editor-btn">エディター切替</button>
-    <label for="microphone-select">マイク選択:</label>
-    <select id="microphone-select">
-      <option value="">マイクを選択</option>
-    </select>
-    <!-- 解像度設定 -->
-    <label for="resolution-width">出力解像度:</label>
-    <input type="number" id="resolution-width" value="1920" min="1"> x
-    <input type="number" id="resolution-height" value="1080" min="1">
-    <button id="apply-resolution-btn">適用</button>
-    <!-- ポップアップボタン -->
-    <button id="popup-btn">ポップアップ表示</button>
-    <!-- サンプルコード選択 -->
-    <label for="sample-select">サンプルシェーダー:</label>
-    <select id="sample-select">
-      <option value="">サンプルを選択</option>
-      <option value="SampleCode/sample1.frag">Sample 1</option>
-      <option value="SampleCode/sample2.frag">Sample 2</option>
-      <!-- 必要に応じてサンプルを追加 -->
-    </select>
-    <!-- 保存済みコードの選択 -->
-    <label for="saved-select">保存済みコード:</label>
-    <select id="saved-select">
-      <option value="">保存済みコードを選択</option>
-      <!-- JavaScriptで動的にオプションを追加 -->
-    </select>
-    <button id="load-saved-btn">ロード</button>
+    <!-- トラッキング状態表示 -->
+    <span id="tracking-status" title="使用状況">
+      <i class="fas fa-eye-slash"></i> トラッキング: OFF
+    </span>
+    
+    <!-- マイク状態表示 -->
+    <span id="mic-status" title="マイク状態">
+      <i class="fas fa-microphone-slash"></i> マイク: OFF
+    </span>
+    
+    <!-- マイクのオン/オフボタン -->
+    <button id="mic-toggle-btn" title="マイクのオン/オフ">
+      <i class="fas fa-microphone-slash"></i>
+    </button>
+    
+    <!-- エディターの表示/非表示ボタン -->
+    <button id="toggle-editor-btn" title="エディターの表示/非表示">
+      <i class="fas fa-code"></i>
+    </button>
+    
+    <!-- コード保存ボタン -->
+    <button id="save-btn" title="コードを保存">
+      <i class="fas fa-save"></i>
+    </button>
+    
+    <!-- コード読み込みボタン -->
+    <button id="load-btn" title="コードを読み込む">
+      <i class="fas fa-folder-open"></i>
+    </button>
+    
+    <!-- ポップアップ表示ボタン -->
+    <button id="popup-btn" title="ポップアップ表示">
+      <i class="fas fa-external-link-alt"></i>
+    </button>
+    
+    <!-- 右側にサンプル選択とマイク選択を配置 -->
+    <div class="toolbar-right">
+      <select id="sample-select" title="サンプルシェーダーを選択">
+        <option value="">サンプルを選択</option>
+        <option value="SampleCode/sample1.frag">Sample 1</option>
+        <option value="SampleCode/sample2.frag">Sample 2</option>
+      </select>
+      <select id="microphone-select" title="マイクを選択">
+        <option value="">マイクを選択</option>
+      </select>
+    </div>
   </div>
-  
+
   <!-- メインコンテナ -->
   <div id="main-container">
-    <!-- 左側のコンテナ（エディタとコンソール） -->
-    <div id="left-container">
-      <!-- エディタコンテナ -->
-      <div id="editor-container">
-        <textarea id="shader-code"></textarea>
-      </div>
-      <!-- コンソールコンテナ -->
-      <div id="console-container">
-        <h2>コンソール</h2>
-        <div id="console-output"></div>
-      </div>
+    <!-- レンダリングキャンバス -->
+    <canvas id="render-canvas"></canvas>
+    
+    <!-- エディターコンテナ -->
+    <div id="editor-container">
+      <textarea id="shader-code"></textarea>
     </div>
     
-    <!-- 右側のコンテナ（コントロールパネル） -->
-    <div id="control-container">
-      <h2>Uniform コントロール</h2>
-      <div id="uniform-controls">
-        <!-- JavaScriptで動的にコントロールを追加 -->
+    <!-- コンソールコンテナ -->
+    <div id="console-container">
+      <div id="console-output"></div>
+    </div>
+    
+    <!-- ロードモーダル -->
+    <div id="load-modal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>保存されたシェーダーコード</h2>
+        <select id="saved-select">
+          <option value="">保存済みコードを選択</option>
+        </select>
+        <button id="load-saved-btn">ロード</button>
       </div>
     </div>
   </div>
+
+  <!-- Font AwesomeのJS（アイコン用） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   
-  <!-- レンダリングキャンバス -->
-  <canvas id="render-canvas"></canvas>
+  <!-- CodeMirrorのJS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
   
-  <!-- ロードモーダル -->
-  <div id="load-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>保存されたシェーダーコード</h2>
-      <ul id="saved-shaders-list">
-        <!-- 保存されたコードのリストをここに動的に追加 -->
-      </ul>
-    </div>
-  </div>
-  
-  <!-- スピナー要素（不要な場合は削除） -->
-  <div id="spinner" class="spinner"></div>
-  
+  <!-- エディターのスクリプト -->
   <script src="editor.js"></script>
 </body>
 </html>
