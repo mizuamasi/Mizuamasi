@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シェーダーVJワークショップ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+        }
+        #content {
+            flex: 1;
+            margin-right: 20px;
+        }
+        #shader-demo {
+            width: 400px;
+            height: 400px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .note {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-left: 5px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="content">
+        <h1>シェーダーVJワークショップ</h1>
+
+        <div class="section">
+            <h2>1. シェーダーの世界へようこそ</h2>
+            <p>シェーダーとは、コンピューターの画面に表示される映像を作るための特別なプログラムです。</p>
+            <ul>
+                <li>あなたは大勢のピクセルたち（画面の小さな点々）の指揮官です</li>
+                <li>画面上の全てのピクセルに同時に指示を出します</li>
+                <li>その指示に従って、ピクセルたちが自分の色を決めます</li>
+            </ul>
+            <div class="note">
+                <strong>ポイント：</strong>
+                シェーダーは、画面全体に一度に指示を出すことで、とても速く複雑な映像を作ることができます。
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>2. ピクセルたちの特徴</h2>
+            <p>画面上の各ピクセルには、それぞれ固有の情報があります。これを使って、ピクセルごとに異なる色を指定できます。</p>
+            <ul>
+                <li>全てのピクセルは自分の位置（住所みたいなもの）を知っています</li>
+                <li>位置の表し方：
+                    <ul>
+                        <li>画面の左下が(0,0)、右上が(画面の幅, 画面の高さ)<br>
+                            例：1920x1080の画面なら、右上は(1920, 1080)</li>
+                        <li>または、左下が(0,0)、右上が(1,1)の簡単な表し方もあります<br>
+                            この場合、中央は(0.5, 0.5)になります</li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="note">
+                <strong>ポイント：</strong>
+                ピクセルの位置を使うことで、画面上の場所によって色を変えることができます。
+            </div>
+        </div>
+    </div>
+
+    <div id="shader-demo"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="common.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

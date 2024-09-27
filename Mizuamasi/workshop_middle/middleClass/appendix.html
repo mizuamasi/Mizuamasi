@@ -1,0 +1,95 @@
+<!-- appendix.html -->
+<div class="section">
+    <h2>付録: GLSL用語解説</h2>
+    <p>シェーダープログラミングにおいてよく使われるGLSLの基本用語や概念を解説します。プログラム未経験者でも理解しやすいように説明しています。</p>
+    
+    <h3>ベクトル型: vec1, vec2, vec3, vec4</h3>
+    <p>GLSLでは、ベクトル型が頻繁に使用されます。ベクトルは複数の数値を一つの変数にまとめるための型です。</p>
+    <ul>
+        <li><strong>vec1:</strong> 単一の浮動小数点数。</li>
+        <li><strong>vec2:</strong> 2つの浮動小数点数を持つベクトル。</li>
+        <li><strong>vec3:</strong> 3つの浮動小数点数を持つベクトル。通常、色や座標を表すのに使用されます。</li>
+        <li><strong>vec4:</strong> 4つの浮動小数点数を持つベクトル。RGBA色や座標変換で使用されます。</li>
+    </ul>
+    
+    <h3>ループ: for文</h3>
+    <p>繰り返し処理を行うために使用します。例えば、複数の点を描画する場合などに便利です。</p>
+    <pre><code class="language-glsl">
+// for文の例
+for(int i = 0; i < 10; i++) {
+    // 繰り返し処理
+}
+    </code></pre>
+    
+    <h3>関数</h3>
+    <p>複数の処理をまとめて再利用可能にするためのブロックです。コードの可読性と再利用性を高めます。</p>
+    <pre><code class="language-glsl">
+// 関数の例
+float add(float a, float b) {
+    return a + b;
+}
+    </code></pre>
+    
+    <h3>関数: mix</h3>
+    <p>`mix`関数は、二つの値を線形補間するために使用されます。具体的には、ある割合で二つの色やベクトルを混ぜ合わせることができます。</p>
+    <pre><code class="language-glsl">
+// mix関数の例
+vec3 blendedColor = mix(color1, color2, 0.5); // color1とcolor2を50%ずつ混ぜる
+    </code></pre>
+    
+    <h3>関数: length</h3>
+    <p>`length`関数は、ベクトルの長さ（距離）を計算します。例えば、二つの点間の距離を求める際に使用します。</p>
+    <pre><code class="language-glsl">
+// length関数の例
+float distance = length(vec2(1.0, 2.0)); // 長さを計算
+    </code></pre>
+    
+    <h3>関数: distance</h3>
+    <p>`distance`関数は、二つのベクトル間の距離を直接計算します。これは、`length`関数を使ってベクトルの差の長さを求めるのと同じです。</p>
+    <pre><code class="language-glsl">
+// distance関数の例
+float dist = distance(vec2(1.0, 2.0), vec2(3.0, 4.0)); // 二点間の距離を計算
+    </code></pre>
+    
+    <h3>関数: step</h3>
+    <p>`step`関数は、特定の閾値を基準に値を切り替えます。例えば、ある条件を満たすかどうかで色を変える際に使用します。</p>
+    <pre><code class="language-glsl">
+// step関数の例
+float alpha = step(0.5, value); // valueが0.5以上なら1.0、未満なら0.0
+    </code></pre>
+    
+    <h3>関数: smoothstep</h3>
+    <p>`smoothstep`関数は、`step`関数と似ていますが、滑らかな遷移を提供します。エッジを滑らかにする際に便利です。</p>
+    <pre><code class="language-glsl">
+// smoothstep関数の例
+float alpha = smoothstep(0.3, 0.2, distance); // distanceが0.3から0.2の間で滑らかに遷移
+    </code></pre>
+    
+    <h3>関数: dot</h3>
+    <p>`dot`関数は、二つのベクトルがどれだけ向き合っているかを計算します。例えば、二つのベクトルが完全に同じ方向を向いている場合は1、逆方向を向いている場合は-1、直交している場合は0になります。</p>
+    <pre><code class="language-glsl">
+// dot関数の例
+float alignment = dot(vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0)); // 0.0
+float alignment2 = dot(vec3(1.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0)); // 1.0
+float alignment3 = dot(vec3(1.0, 0.0, 0.0), vec3(-1.0, 0.0, 0.0)); // -1.0
+    </code></pre>
+    
+    <h3>関数: cross</h3>
+    <p>`cross`関数は、二つのベクトルの外積を計算します。これは、二つのベクトルが作る平面に垂直なベクトルを生成します。</p>
+    <pre><code class="language-glsl">
+// cross関数の例
+vec3 perpendicular = cross(vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0)); // vec3(0.0, 0.0, 1.0)
+    </code></pre>
+    
+    <h3>その他の重要な用語</h3>
+    <ul>
+        <li><strong>uniform:</strong> シェーダー外から値を渡すための変数。</li>
+        <li><strong>in:</strong> 入力変数。頂点シェーダーからフラグメントシェーダーへデータを渡すために使用します。</li>
+        <li><strong>out:</strong> 出力変数。フラグメントシェーダーの出力を定義します。</li>
+    </ul>
+    
+    <div class="note">
+        <strong>ポイント：</strong>
+        これらの基本用語と概念を理解することで、シェーダープログラミングの理解が深まります。さらに詳しく学びたい方は、上記の学習リソースを参照してください。
+    </div>
+</div>

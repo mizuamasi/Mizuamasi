@@ -1,92 +1,55 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シェーダーの基礎</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
-    <script src="shader-demo.js"></script>
-</head>
-<body>
-    <div class="container">
-        <section class="section" id="shader-basics">
-            <h2>シェーダーの基礎</h2>
-            
-            <p>シェーダーは、コンピューターグラフィックスの世界で魔法のような力を持つプログラムです。画面上の一つ一つの点（ピクセル）の色や明るさを自在に操ることができるんです。</p>
-
-            <h3>シェーダーの特徴</h3>
-            <ul>
-                <li>高速処理: GPUを使って並列処理を行うため、膨大な数のピクセルを一瞬で計算できます。</li>
-                <li>リアルタイム性: ゲームや映像制作で、動きのある美しいグラフィックスをリアルタイムで生成できます。</li>
-                <li>数学的表現: 色や形を数式で表現するため、複雑な視覚効果も簡潔に記述できます。</li>
-            </ul>
-
-            <h3>シェーダーの基本構造</h3>
-            <p>シェーダーの基本的な構造を見てみましょう：</p>
-            <div class="code-block">
-                <pre><code>void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-    vec2 uv = fragCoord/iResolution.xy;
-    fragColor = vec4(uv.x, uv.y, 0.5, 1.0);
-}</code></pre>
-            </div>
-            <p>この簡単なコードで、画面全体にグラデーションを描くことができます。一つ一つ解説していきましょう：</p>
-            <ul>
-                <li><code>mainImage</code>: シェーダーのメイン関数です。すべての魔法はここから始まります。</li>
-                <li><code>fragColor</code>: 各ピクセルの色を指定する変数です。</li>
-                <li><code>fragCoord</code>: 現在処理しているピクセルの座標です。</li>
-                <li><code>uv</code>: 画面の大きさで正規化された座標です。(0,0)から(1,1)の範囲になります。</li>
-                <li><code>vec4(uv.x, uv.y, 0.5, 1.0)</code>: 赤、緑、青、透明度の順で色を指定しています。</li>
-            </ul>
-
-            <h3>インタラクティブデモ</h3>
-            <p>以下のデモで、実際のシェーダーの動作を確認してみましょう：</p>
-            <div id="shader-demo"></div>
-            <div class="resolution-controls">
-                <button id="low-res" class="button">低解像度</button>
-                <button id="medium-res" class="button">中解像度</button>
-                <button id="high-res" class="button">高解像度</button>
-            </div>
-            <h3>シェーダーコードを編集してみよう</h3>
-            <p>以下のエディターでコードを変更し、どのように結果が変わるか試してみてください：</p>
-            <div id="editor">void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{           <div class="resolution-controls"></div>
-    <button id="low-res" class="button">低解像度</button>
-    <button id="medium-res" class="button">中解像度</button>
-    <button id="high-res" class="button">高解像度</button>
-</div>
-    vec2 uv = fragCoord/iResolution.xy;
-    float time = iTime;
+<!-- basics.html -->
+<div class="section">
+    <h2>シェーダーの基礎</h2>
+    <p>シェーダーは、画面上のピクセル一つひとつに対して色や動きを指示するプログラムです。ここでは、シェーダーの基本的な仕組みと、シェーダーコードの簡単な例を紹介します。</p>
     
-    // 赤と緑の成分を時間に応じて変化させる
-    float r = sin(time) * 0.5 + 0.5;
-    float g = cos(time) * 0.5 + 0.5;
+    <h3>ピクセルの指揮官としての役割</h3>
+    <p>皆さんはピクセルたちの指揮官です。ピクセルは一つひとつが自分の位置（座標）を知っており、その情報をもとに色を決定します。同じ指示を全てのピクセルに出しますが、各ピクセルが自分の位置情報を使って色を計算することで、多様なビジュアル表現が可能になります。</p>
     
-    fragColor = vec4(r, g, uv.y, 1.0);
-}</div>
-            <button id="run-shader" class="button">シェーダーを実行</button>
+    <h3>基本的なグラデーションシェーダー</h3>
+    <p>以下は、シンプルなグラデーションを生成するシェーダーコードの例です。このシェーダーは、画面の左から右へ向かって色が変化するグラデーションを描きます。</p>
+    
+    <div class="code-block">
+        <pre><code class="language-glsl">
+// 基本的なグラデーションシェーダー
+uniform float iTime;
+uniform vec3 iResolution;
 
-            <h3>実験してみよう</h3>
-            <p>以下のような変更を試してみてください：</p>
-            <ul>
-                <li>色の計算式を変えてみる（例：<code>sin</code>を<code>cos</code>に変える）</li>
-                <li>時間の係数を変更して、変化のスピードを調整する</li>
-                <li>新しい色成分を追加して、より複雑なパターンを作る</li>
-            </ul>
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    // ピクセルの座標を0から1の範囲に正規化
+    vec2 uv = fragCoord / iResolution.xy;
+    // 水平方向のグラデーションを作成
+    vec3 color = vec3(uv.x, 0.5, 1.0 - uv.x);
+    fragColor = vec4(color, 1.0);
+}
 
-            <h3>次のステップ</h3>
-            <p>シェーダーの基本を理解したら、次は以下のような高度なテクニックに挑戦してみましょう：</p>
-            <ul>
-                <li>形状の描画（円、四角形など）</li>
-                <li>テクスチャの利用</li>
-                <li>ノイズ関数を使った自然な模様の生成</li>
-                <li>ライティング効果の追加</li>
-            </ul>
-
-            <p>シェーダーの世界は無限の可能性に満ちています。ぜひ、自分だけの魔法の杖（コード）を使って、美しいビジュアルの世界を探索してください！</p>
-        </section>
+void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+}
+        </code></pre>
     </div>
-</body>
-</html>
+    
+    <p>このシェーダーでは、`fragCoord`という変数を使って各ピクセルの位置を取得し、`uv`という変数に正規化された座標を計算しています。`uv.x`の値に基づいて、ピクセルの色を決定しています。これにより、左から右へと滑らかに色が変化するグラデーションが生成されます。</p>
+    
+    <h3>ピクセルの視点</h3>
+    <p>あなたは画面上の小さなピクセルです。毎フレーム、指揮官から「左から右へ向かって色が変化するように指示を出します」と言われます。しかし、あなたには自分の位置（座標）が与えられています。あなたはその座標を使って、自分の色を計算します。例えば、左側に近いほど赤く、右側に近いほど青くなります。このプロセスが連続して行われることで、全体として美しいグラデーションが生まれます。</p>
+    
+    <div class="controls">
+        <label for="resolution-animation">解像度 (n):</label>
+        <input type="range" id="resolution-animation" min="1" max="1000" value="1">
+        
+        <label for="show-coordinates-animation">
+            <input type="checkbox" id="show-coordinates-animation">
+            座標表示
+        </label>
+    </div>
+    
+    <!-- <div class="editor-container">
+        <h3>シェーダーコードエディター</h3>
+        <div id="editor-basics" class="editor"></div>
+        <div id="error-basics" class="error-message"></div>
+    </div> -->
+    
+    <button class="button" onclick="showDemo('gradient', 'shader-demo-basics')">基本デモを見る</button>
+    <div id="shader-demo-basics" class="shader-demo"></div>
+</div>

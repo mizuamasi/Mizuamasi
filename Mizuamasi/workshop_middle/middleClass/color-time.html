@@ -1,0 +1,52 @@
+<!-- color-time.html -->
+<div class="section">
+    <h2>色と時間の変化</h2>
+    <p>時間が経過するにつれて色が変化するシェーダーを作成しましょう。これにより、動的で生き生きとしたビジュアル表現が可能になります。</p>
+    
+    <h3>時間を使った色の変化</h3>
+    <p>シェーダー内で時間の変数（`iTime`）を利用することで、色が時間とともに変化する効果を作り出します。これにより、静止画ではなく動きのある映像を生成できます。</p>
+    
+    <div class="code-block">
+        <pre><code class="language-glsl">
+// 時間によって色が変化するシェーダー
+uniform float iTime;
+uniform vec3 iResolution;
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    // ピクセルの座標を0から1の範囲に正規化
+    vec2 uv = fragCoord / iResolution.xy;
+    // 時間と座標に基づいて色を計算
+    vec3 color = 0.5 + 0.5 * sin(iTime + uv.xyx + vec3(0, 2, 4));
+    fragColor = vec4(color, 1.0);
+}
+
+void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+}
+        </code></pre>
+    </div>
+    
+    <p>このシェーダーでは、`sin`関数を使用して色が時間とともに変化します。`iTime`の値が増加するにつれて、色が滑らかに変わる様子を確認できます。</p>
+    
+    <h3>ピクセルの気持ちになって考える</h3>
+    <p>想像してみてください。あなたは画面上の小さなピクセルです。毎フレーム、あなたは指揮官から新しい指示を受け取ります。しかし、あなたは自分の位置（座標）を知っています。指示には時間の変数も含まれており、あなたはそれを使って色を決定します。時間が経つにつれて、あなたの色も変わっていきます。このプロセスが連続して行われることで、動きのある美しいビジュアルが生まれます。</p>
+    
+    <div class="controls">
+        <label for="resolution-animation">解像度 (n):</label>
+        <input type="range" id="resolution-animation" min="1" max="1000" value="1">
+        
+        <label for="show-coordinates-animation">
+            <input type="checkbox" id="show-coordinates-animation">
+            座標表示
+        </label>
+    </div>
+    
+    <!-- <div class="editor-container">
+        <h3>シェーダーコードエディター</h3>
+        <div id="editor-color-time" class="editor"></div>
+        <div id="error-color-time" class="error-message"></div>
+    </div> -->
+    
+    <button class="button" onclick="showDemo('color-time', 'shader-demo-color-time')">色と時間のデモを見る</button>
+    <div id="shader-demo-color-time" class="shader-demo"></div>
+</div>

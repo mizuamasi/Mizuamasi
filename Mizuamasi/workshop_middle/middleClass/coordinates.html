@@ -1,0 +1,42 @@
+<!-- coordinates.html -->
+<div class="section">
+    <h2>座標系の理解</h2>
+    <p>シェーダーを使ってピクセルを操作するためには、座標系の理解が重要です。ここでは、シェーダー内で使用される座標系についてわかりやすく説明します。</p>
+    
+    <h3>スクリーン座標</h3>
+    <p>シェーダーでは、各ピクセルの位置をスクリーン座標（`fragCoord`）で取得します。スクリーン座標は、画面の左下が(0,0)、右上が(画面の幅, 画面の高さ)となります。</p>
+    
+    <h3>正規化座標</h3>
+    <p>スクリーン座標を0から1の範囲に正規化することで、異なる解像度でも一貫した処理が可能になります。以下のように計算します：</p>
+    
+    <div class="code-block">
+        <pre><code class="language-glsl">
+// スクリーン座標を正規化
+vec2 uv = fragCoord / iResolution.xy;
+        </code></pre>
+    </div>
+    
+    <p>正規化された座標（`uv`）を使うことで、ピクセルの位置に基づいた色の変化や形状の描画が容易になります。例えば、`uv.x`は横方向、`uv.y`は縦方向の位置を示します。</p>
+    
+    <h3>ピクセルの視点</h3>
+    <p>あなたは画面上の小さなピクセルです。毎フレーム、指揮官から指示を受け取ります。その指示にはあなたの位置情報が含まれています。正規化座標を使うことで、あなたの位置が画面全体に対してどこにあるかを簡単に知ることができます。これを基に、色や形を決定します。</p>
+    
+    <div class="controls">
+        <label for="resolution-animation">解像度 (n):</label>
+        <input type="range" id="resolution-animation" min="1" max="1000" value="1">
+        
+        <label for="show-coordinates-animation">
+            <input type="checkbox" id="show-coordinates-animation">
+            座標表示
+        </label>
+    </div>
+    
+    <!-- <div class="editor-container">
+        <h3>シェーダーコードエディター</h3>
+        <div id="editor-coordinates" class="editor"></div>
+        <div id="error-coordinates" class="error-message"></div>
+    </div> -->
+    
+    <button class="button" onclick="showDemo('coordinates', 'shader-demo-coordinates')">座標系デモを見る</button>
+    <div id="shader-demo-coordinates" class="shader-demo"></div>
+</div>

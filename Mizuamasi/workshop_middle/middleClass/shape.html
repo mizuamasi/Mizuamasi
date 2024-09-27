@@ -1,0 +1,60 @@
+<!-- shape.html -->
+<div class="section">
+    <h2>形を作ろう</h2>
+    <p>シェーダーを使って様々な形を描く方法を学びます。今回は、円や四角などの基本的な形を描いてみましょう。</p>
+    
+    <h3>距離関数を使った円の描画</h3>
+    <p>距離関数を利用すると、指定した位置からの距離に基づいて形を描くことができます。以下は、中心に円を描くシェーダーの例です。</p>
+    
+    <div class="code-block">
+        <pre><code class="language-glsl">
+// 中心に円を描くシェーダー
+uniform float iTime;
+uniform vec3 iResolution;
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    // 正規化座標に変換
+    vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+    // ピクセルから中心までの距離を計算
+    float dist = length(uv);
+    // 円の半径
+    float radius = 0.3;
+    // 円のエッジを滑らかにするための値
+    float edge = 0.01;
+    // 円の内外を判定
+    float alpha = smoothstep(radius, radius - edge, dist);
+    // 色を決定（赤から透明へ）
+    vec3 color = mix(vec3(1.0, 0.0, 0.0), vec3(0.0), alpha);
+    fragColor = vec4(color, 1.0);
+}
+
+void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+}
+        </code></pre>
+    </div>
+    
+    <p>このシェーダーでは、`length`関数を使ってピクセルから中心までの距離を計算し、その距離に基づいて円を描いています。`smoothstep`関数を使用して、円のエッジを滑らかにしています。</p>
+    
+    <h3>ピクセルの視点</h3>
+    <p>あなたは画面上の小さなピクセルです。毎フレーム、指揮官から「円の中心からの距離に応じて色を決めてください」という指示を受け取ります。中心に近いほど赤く、遠ざかるほど透明になります。この指示に従って、あなたの色を決定します。</p>
+    
+    <div class="controls">
+        <label for="resolution-animation">解像度 (n):</label>
+        <input type="range" id="resolution-animation" min="1" max="1000" value="1">
+        
+        <label for="show-coordinates-animation">
+            <input type="checkbox" id="show-coordinates-animation">
+            座標表示
+        </label>
+    </div>
+    
+    <!-- <div class="editor-container">
+        <h3>シェーダーコードエディター</h3>
+        <div id="editor-shape" class="editor"></div>
+        <div id="error-shape" class="error-message"></div>
+    </div> -->
+    
+    <button class="button" onclick="showDemo('shape', 'shader-demo-shape')">形のデモを見る</button>
+    <div id="shader-demo-shape" class="shader-demo"></div>
+</div>

@@ -1,0 +1,35 @@
+<!-- vj-intro.html -->
+<div class="section">
+    <h2>VJとは</h2>
+    <p>VJ（ビジュアルジョッキー）は、音楽に合わせてリアルタイムで視覚効果を操作するパフォーマンスです。音楽とビジュアルがシンクロすることで、観客に強いインパクトを与えます。</p>
+    
+    <div class="image-container">
+        <img src="images/vj-example.jpg" alt="VJパフォーマンスの例">
+    </div>
+    
+    <p>VJパフォーマンスでは、音楽のリズムやメロディに合わせてシェーダーを調整します。例えば、ビートに合わせて色が変わったり、音の強弱に応じて形が変形したりします。これにより、視覚的にも音楽的にも一体感のあるパフォーマンスが実現します。</p>
+    
+    <h3>ピクセルの視点</h3>
+    <p>あなたは音楽に合わせて動くピクセルです。音のビートやメロディに応じて、指揮官から新しい指示を受け取ります。指示には色の変化や形の変形が含まれており、あなたはそれに従って自分の色を更新します。このプロセスがリアルタイムで行われることで、音楽とビジュアルがシンクロしたパフォーマンスが生まれます。</p>
+    
+    <div class="controls">
+        <label for="resolution-vj">解像度 (n):</label>
+        <input type="range" id="resolution-vj" min="1" max="10" step="1" value="1">
+        
+        <label for="show-coordinates-vj">
+            <input type="checkbox" id="show-coordinates-vj">
+            座標表示
+        </label>
+    </div>
+    
+    <button class="button" onclick="showDemo('vj', 'shader-demo-vj')">VJデモを見る</button>
+    <div id="shader-demo-vj" class="shader-demo">
+        <!-- エディターとエラーメッセージの削除 -->
+        <!--
+        <div class="editor-container">
+            <div id="editor-vj" class="editor"></div>
+            <div id="error-vj" class="error-message"></div>
+        </div>
+        -->
+    </div>
+</div>

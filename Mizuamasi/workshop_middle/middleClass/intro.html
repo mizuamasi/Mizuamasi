@@ -1,0 +1,39 @@
+<!-- intro.html -->
+<div class="section">
+    <h2>はじめに</h2>
+    <p>ようこそ、「シェーダーで楽しむビジュアルプログラミング: VJワークショップ」へ！このワークショップでは、シェーダーを使ってビジュアル表現を創造し、VJパフォーマンスの基礎を学びます。</p>
+    
+    <!-- <div class="image-container">
+        <img src="images/intro-image.jpg" alt="ワークショップのイメージ">
+       
+    </div> -->
+    
+    <p>シェーダーは、ビジュアルプログラミングの強力なツールです。これを使うことで、リアルタイムで動く美しい映像を簡単に作成できます。</p>
+    
+    <h3>Shadertoyとは</h3>
+    <p>Shadertoyは、ウェブ上でシェーダーを作成・共有・実行できるプラットフォームです。ここでは、VJワークショップ用のシェーダーを作成し、共有する際にShadertoyの機能を活用します。`mainImage`関数を使用することで、Shadertoyと同様の開発体験を提供しています。</p>
+    
+    <div class="controls">
+        <label for="resolution-intro">解像度:</label>
+        <input type="range" id="resolution-intro" min="100" max="1920" value="800">
+        
+        <label for="show-coordinates-intro">
+            <input type="checkbox" id="show-coordinates-intro">
+            座標表示
+        </label>
+    </div>
+    
+    <!-- <div class="editor-container">
+        <h3>シェーダーコードエディター</h3>
+        <div id="editor-intro" class="editor"></div>
+        <div id="error-intro" class="error-message"></div>
+    </div> -->
+    
+    <button class="button" onclick="showDemo('gradient', 'shader-demo-intro')">グラデーションデモを見る</button>
+    <div id="shader-demo-intro" class="shader-demo"></div>
+    
+    <div class="note">
+        <strong>ポイント：</strong>
+        このワークショップでは、シェーダーの基礎から実践的なVJパフォーマンスの制作までを段階的に学びます。楽しみながら学んでいきましょう！
+    </div>
+</div>
