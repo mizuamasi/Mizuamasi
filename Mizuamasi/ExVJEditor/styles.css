@@ -45,98 +45,218 @@ body {
   background-color: #0033aa;
 }
 
-/* 上部ツールバー */
-#toolbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: #111;
-  padding: 5px;
-  display: flex;
-  align-items: center;
-  z-index: 10;
-}
-
-#toolbar button,
-#toolbar input,
-#toolbar select,
-#toolbar label {
-  margin-right: 15px;
+#continue-without-tracking-btn {
+  margin-top: 20px;
+  background-color: #555;
   color: #fff;
-}
-
-#toolbar button {
-  background-color: #0055ff;
+  padding: 10px;
   border: none;
-  padding: 5px 10px;
   cursor: pointer;
 }
 
-#toolbar button:hover {
-  background-color: #0033aa;
+#continue-without-tracking-btn:hover {
+  background-color: #777;
 }
 
-#toolbar input,
-#toolbar select {
-  background-color: #222;
-  border: none;
-  padding: 5px;
-  color: #fff;
+/* スピナーのスタイル */
+.spinner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #555;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 2s linear infinite;
+  transform: translate(-50%, -50%);
 }
 
-#toolbar label {
-  margin-right: 5px;
-}
-
-/* メインコンテナ */
-#main-container {
-  display: flex;
-  height: calc(100vh - 40px); /* ツールバーの高さを引く */
-  margin-top: 40px; /* ツールバーの高さ */
-}
-
-/* 左側のコンテナ（エディタとコンソール） */
-#left-container {
-  width: 66.66%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-/* エディタコンテナ */
-#editor-container {
-  height: 80%; /* 縦幅を増加 */
-  position: relative;
-}
-
-#editor-container.hidden {
+.hidden {
   display: none;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ツールバーのスタイル */
+#toolbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 5px;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+}
+
+#toolbar button {
+  background: none;
+  border: none;
+  color: #fff;
+  margin-right: 10px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+#toolbar button:hover {
+  color: #00f;
+}
+
+#toolbar .toolbar-right {
+  margin-left: auto;
+}
+
+#toolbar select {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  margin-right: 10px;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+/* メインコンテナのスタイル */
+#main-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+}
+
+/* レンダリングキャンバスを背景に配置 */
+#render-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* エディターをオーバーレイで表示 */
+#editor-container {
+  position: absolute;
+  top: 40px; /* ツールバーの高さ */
+  left: 0;
+  width: 100%;
+  height: calc(100% - 40px);
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明 */
+  z-index: 2;
+  overflow: auto;
 }
 
 /* コンソールコンテナ */
 #console-container {
-  height: 20%; /* 縦幅を減少 */
-  background-color: #111;
-  padding: 10px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  background-color: rgba(0, 0, 0, 0.7);
   overflow-y: auto;
+  z-index: 3;
 }
 
 #console-output {
   white-space: pre-wrap;
   font-family: monospace;
+  padding: 10px;
 }
 
 /* コントロールパネル */
 #control-container {
-  width: 33.33%;
+  position: absolute;
+  top: 40px;
+  right: 0;
+  width: 300px;
+  height: calc(100% - 40px);
   background-color: #222;
   padding: 10px;
   overflow-y: auto;
+  z-index: 4;
 }
 
 #control-container h2 {
   margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+#uniform-controls label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+#uniform-controls input[type="range"] {
+  width: 100%;
+  margin: 5px 0 15px 0;
+}
+
+/* ロードモーダルのスタイル */
+.modal {
+  display: none; /* 初期状態は非表示 */
+  position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #222;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 40%;
+  color: #fff;
+  border-radius: 8px;
+}
+
+.modal-content select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #333;
+  border: none;
+  color: #fff;
+  border-radius: 4px;
+}
+
+.modal-content button {
+  width: 100%;
+  padding: 10px;
+  background-color: #0055ff;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.modal-content button:hover {
+  background-color: #0033aa;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: #fff;
+  text-decoration: none;
 }
 
 /* CodeMirrorのスタイル */
@@ -147,70 +267,25 @@ body {
   font-size: 14px;
 }
 
-/* レンダリングキャンバス */
-#render-canvas {
-  position: absolute;
-  top: 40px; /* ツールバーの高さ */
-  left: 0;
-  width: 66.66%;
-  height: 80%;
-  z-index: -1; /* 背景に配置 */
-}
+/* シンタックスハイライトの修正 */
+.cm-s-dracula .cm-keyword { color: #ff79c6; }
+.cm-s-dracula .cm-string { color: #f1fa8c; }
+.cm-s-dracula .cm-number { color: #bd93f9; }
+.cm-s-dracula .cm-variable { color: #50fa7b; }
+.cm-s-dracula .cm-def { color: #8be9fd; }
+.cm-s-dracula .cm-comment { color: #6272a4; font-style: italic; }
 
-/* ボタン類 */
-#save-btn, #popup-btn {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  background-color: #0055ff;
-  border: none;
-  color: #fff;
-  padding: 10px;
-  cursor: pointer;
-  margin-left: 10px;
-}
+/* レスポンシブ調整 */
+@media (max-width: 768px) {
+  #control-container {
+    width: 100%;
+    height: 200px;
+    bottom: 0;
+    top: unset;
+    right: unset;
+  }
 
-#save-btn:hover, #popup-btn:hover {
-  background-color: #0033aa;
-}
-
-/* 解像度設定 */
-#resolution-setting {
-  position: fixed;
-  bottom: 50px;
-  left: 10px;
-  background-color: #222;
-  padding: 10px;
-}
-
-#resolution-setting input {
-  width: 60px;
-  background-color: #333;
-  border: none;
-  color: #fff;
-  padding: 5px;
-}
-
-#apply-resolution-btn {
-  background-color: #0055ff;
-  border: none;
-  color: #fff;
-  padding: 5px;
-  cursor: pointer;
-}
-
-#apply-resolution-btn:hover {
-  background-color: #0033aa;
-}
-
-/* スライダーのスタイル */
-#uniform-controls label {
-  display: block;
-  margin-top: 10px;
-  font-weight: bold;
-}
-
-#uniform-controls input[type="range"] {
-  width: 100%;
-  margin: 5px 0 15px 0;
+  #editor-container {
+    height: calc(100% - 240px); /* ツールバー + コントロールパネル */
+  }
 }

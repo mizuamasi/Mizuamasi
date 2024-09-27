@@ -22,14 +22,33 @@ let mouseX = 0.0;
 let mouseY = 0.0;
 let mousePressed = false;
 
+// 最大画面解像度を取得
+const maxResolution = {
+  width: window.screen.width,
+  height: window.screen.height
+};
+
 window.onload = function() {
   initializeEditor();
   initializeGL();
-  startTrackingUsage();
   setupEventListeners();
-  setupLoadModal(); // ロードモーダルの設定
+  setupLoadModal();
   loadSavedCode();
   getMicrophoneDevices();
+  
+  // ログインセッションの確認
+  const session = JSON.parse(localStorage.getItem('session'));
+  if (session && session.isLoggedIn) {
+    startTrackingUsage();
+    showMainContainer();
+  } else {
+    // 認証画面を表示
+    document.getElementById('auth-container').style.display = 'block';
+    document.getElementById('main-container').style.display = 'none';
+  }
+  
+  // サンプルコードの自動読み込み
+  loadSampleCodeFromURL('SampleCode/sample1.frag');
 };
 
 /**
@@ -48,19 +67,14 @@ function initializeEditor() {
 }
 
 /**
- * WebGLの初期化
+ * WebGL2 の初期化
  */
 function initializeGL() {
   const canvas = document.getElementById('render-canvas');
-  //gl = canvas.getContext('webgl2');
   gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
   if (!gl) {
-    alert('WebGL2がサポートされていません。WebGLにフォールバックします。');
-    gl = canvas.getContext('webgl');
-    if (!gl) {
-      alert('WebGLがサポートされていません。');
-      return;
-    }
+    alert('WebGL2がサポートされていません。このアプリケーションはWebGL2を必要とします。');
+    return;
   }
   resizeCanvas();
 
@@ -86,25 +100,33 @@ function initializeGL() {
 function compileShader() {
   let shaderSource = editor.getValue();
 
-  // main関数の自動挿入
-  if (!/void\s+main\s*\(/.test(shaderSource)) {
-    shaderSource += `
-    
-    void main() {
-      mainImage(gl_FragColor, gl_FragCoord.xy);
+  // main関数の自動挿入とインストルメントを一度だけ実行する
+  if (!shaderSource.includes('// [INJECTED CODE START]')) {
+    // GLSLバージョン指定を追加
+    shaderSource = `#version 300 es
+precision mediump float;
+${shaderSource}`;
+
+    // print関数のインストルメントを追加
+    shaderSource = injectPrintFunction(shaderSource);
+
+    // main関数の自動挿入
+    if (!/void\s+main\s*\(/.test(shaderSource)) {
+      shaderSource += `
+
+void main() {
+  vec2 fragCoord = gl_FragCoord.xy;
+  mainImage(fragColor, fragCoord);
+}`;
     }
-    `;
   }
 
-  // print関数のインストルメント
-  shaderSource = injectPrintFunction(shaderSource);
-
-  const vertexShaderSource = `
-    attribute vec4 position;
-    void main() {
-      gl_Position = position;
-    }
-  `;
+  const vertexShaderSource = `#version 300 es
+precision mediump float;
+layout(location = 0) in vec2 position;
+void main() {
+  gl_Position = vec4(position, 0.0, 1.0);
+}`;
 
   // エラーメッセージをクリア
   document.getElementById('console-output').innerText = '';
@@ -142,6 +164,7 @@ function createShader(type, source) {
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
     const error = gl.getShaderInfoLog(shader);
     showError(error);
+    gl.deleteShader(shader);
     return null;
   }
   return shader;
@@ -159,6 +182,7 @@ function createProgram(vs, fs) {
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
     const error = gl.getProgramInfoLog(prog);
     showError(error);
+    gl.deleteProgram(prog);
     return null;
   }
   return prog;
@@ -168,70 +192,91 @@ function createProgram(vs, fs) {
  * GLSLコード内のprint関数をインストルメント
  */
 function injectPrintFunction(shaderSource) {
-  // print関数の定義を追加
+  // 既にインストルメントされている場合は何もしない
+  if (shaderSource.includes('// [INJECTED CODE START]')) {
+    return shaderSource;
+  }
+
+  // インストルメントコードの挿入
   const printFunction = `
-  uniform vec2 iMouse;
-  uniform vec3 iResolution;
-  out vec4 outColor;
-  ivec2 printCoord = ivec2(-1, -1);
-  vec4 printValues[10];
-  int printCount = 0;
+// [INJECTED CODE START]
+out vec4 fragColor;
+vec4 printValues[10];
+int printCount = 0;
 
-  void print(float value) {
-    if (printCount < 10 && (printCoord == ivec2(-1, -1) || ivec2(gl_FragCoord.xy) == printCoord)) {
-      printValues[printCount] = vec4(value, 0.0, 0.0, 0.0);
-      printCount++;
-    }
+void print(float value) {
+  if (printCount < 10) {
+    printValues[printCount] = vec4(value, 0.0, 0.0, 0.0);
+    printCount++;
   }
+}
 
-  void print(vec2 value) {
-    if (printCount < 10 && (printCoord == ivec2(-1, -1) || ivec2(gl_FragCoord.xy) == printCoord)) {
-      printValues[printCount] = vec4(value, 0.0, 0.0);
-      printCount++;
-    }
+void print(vec2 value) {
+  if (printCount < 10) {
+    printValues[printCount] = vec4(value, 0.0, 0.0);
+    printCount++;
   }
+}
 
-  void print(vec3 value) {
-    if (printCount < 10 && (printCoord == ivec2(-1, -1) || ivec2(gl_FragCoord.xy) == printCoord)) {
-      printValues[printCount] = vec4(value, 0.0);
-      printCount++;
-    }
+void print(vec3 value) {
+  if (printCount < 10) {
+    printValues[printCount] = vec4(value, 0.0);
+    printCount++;
   }
+}
 
-  void print(vec4 value) {
-    if (printCount < 10 && (printCoord == ivec2(-1, -1) || ivec2(gl_FragCoord.xy) == printCoord)) {
-      printValues[printCount] = value;
-      printCount++;
-    }
+void print(vec4 value) {
+  if (printCount < 10) {
+    printValues[printCount] = value;
+    printCount++;
   }
+}
 
-  void print(float value, vec2 coord) {
-    printCoord = ivec2(coord);
-    print(value);
-    printCoord = ivec2(-1, -1);
+void print(float value, vec2 coord) {
+  if (distance(gl_FragCoord.xy, coord) < 1.0 && printCount < 10) {
+    printValues[printCount] = vec4(value, 0.0, 0.0, 0.0);
+    printCount++;
   }
+}
 
-  void print(vec2 value, vec2 coord) {
-    printCoord = ivec2(coord);
-    print(value);
-    printCoord = ivec2(-1, -1);
+void print(vec2 value, vec2 coord) {
+  if (distance(gl_FragCoord.xy, coord) < 1.0 && printCount < 10) {
+    printValues[printCount] = vec4(value, 0.0, 0.0);
+    printCount++;
   }
+}
 
-  void print(vec3 value, vec2 coord) {
-    printCoord = ivec2(coord);
-    print(value);
-    printCoord = ivec2(-1, -1);
+void print(vec3 value, vec2 coord) {
+  if (distance(gl_FragCoord.xy, coord) < 1.0 && printCount < 10) {
+    printValues[printCount] = vec4(value, 0.0);
+    printCount++;
   }
+}
 
-  void print(vec4 value, vec2 coord) {
-    printCoord = ivec2(coord);
-    print(value);
-    printCoord = ivec2(-1, -1);
+void print(vec4 value, vec2 coord) {
+  if (distance(gl_FragCoord.xy, coord) < 1.0 && printCount < 10) {
+    printValues[printCount] = value;
+    printCount++;
   }
-  `;
+}
 
-  // シェーダーソースにprint関数を追加
-  shaderSource = shaderSource.replace(/(void\s+mainImage\s*\()/, `${printFunction}\n$1`);
+// user_mainImage関数の宣言
+void user_mainImage(out vec4 fragColor, in vec2 fragCoord);
+
+// main関数の定義
+void main() {
+  printCount = 0; // 毎フレームリセット
+  user_mainImage(fragColor, fragCoord.xy);
+
+  // printValuesをfragColorに追加
+  for(int i = 0; i < 10; i++) {
+    fragColor += printValues[i];
+  }
+}
+// [INJECTED CODE END]
+`;
+
+  shaderSource = shaderSource.replace(/void\s+mainImage\s*\(/, `${printFunction}\nvoid user_mainImage(`);
 
   return shaderSource;
 }
@@ -272,6 +317,7 @@ function getDefaultUniformValue(type) {
  */
 function createUniformControl(name, type, options) {
   const controlContainer = document.getElementById('uniform-controls');
+  
   const label = document.createElement('label');
   label.innerText = name;
   controlContainer.appendChild(label);
@@ -280,10 +326,11 @@ function createUniformControl(name, type, options) {
   for (let i = 0; i < size; i++) {
     const input = document.createElement('input');
     input.type = 'range';
-    input.min = options.min || -1;
-    input.max = options.max || 1;
-    input.step = options.step || 0.0001;
+    input.min = options.min !== undefined ? options.min : -1;
+    input.max = options.max !== undefined ? options.max : 1;
+    input.step = options.step !== undefined ? options.step : 0.0001;
     input.value = uniforms[name].value[i];
+    input.title = `${name}.${i+1}`;
     input.oninput = function() {
       uniforms[name].value[i] = parseFloat(this.value);
       render();
@@ -352,7 +399,9 @@ function render() {
 
   // ポップアップへの送信
   if (popupWindow && !popupWindow.closed) {
-    popupWindow.postMessage({ type: 'shaderCode', code: editor.getValue() }, '*');
+    // レンダリング結果を画像として取得
+    const dataURL = gl.canvas.toDataURL();
+    popupWindow.postMessage({ type: 'renderResult', data: dataURL }, '*');
   }
 }
 
@@ -383,7 +432,7 @@ function setBuiltInUniforms() {
  */
 function setAudioTextureUniform() {
   const iChannel0Location = gl.getUniformLocation(program, 'iChannel0');
-  if (iChannel0Location) {
+  if (iChannel0Location && audioTexture) {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, audioTexture);
     gl.uniform1i(iChannel0Location, 0);
@@ -394,25 +443,31 @@ function setAudioTextureUniform() {
  * printValuesの取得とコンソール出力
  */
 function readPrintValues() {
-  // フレームバッファを読み取る
-  const pixels = new Float32Array(canvasWidth * canvasHeight * 4);
-  gl.readPixels(0, 0, canvasWidth, canvasHeight, gl.RGBA, gl.FLOAT, pixels);
-
   // マウス位置のピクセルを取得
   const x = Math.floor(mouseX);
   const y = Math.floor(mouseY);
-  const index = (y * canvasWidth + x) * 4;
 
-  const r = pixels[index];
-  const g = pixels[index + 1];
-  const b = pixels[index + 2];
-  const a = pixels[index + 3];
-
-  // コンソールに出力
-  if (!isNaN(r) && !isNaN(g) && !isNaN(b) && !isNaN(a)) {
-    const consoleOutput = document.getElementById('console-output');
-    consoleOutput.innerText = `値: ${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)}, ${a.toFixed(2)}`;
+  // ピクセルがキャンバス範囲内か確認
+  if (x < 0 || x >= gl.canvas.width || y < 0 || y >= gl.canvas.height) {
+    return;
   }
+
+  // フロートテクスチャを有効にする必要があるため、WebGL2のみ対応
+  if (!gl.getExtension('EXT_color_buffer_float')) {
+    console.warn('EXT_color_buffer_floatがサポートされていません。print機能が無効です。');
+    return;
+  }
+
+  const pixels = new Float32Array(4);
+  gl.readPixels(x, y, 1, 1, gl.RGBA, gl.FLOAT, pixels);
+
+  const r = pixels[0];
+  const g = pixels[1];
+  const b = pixels[2];
+  const a = pixels[3];
+
+  const consoleOutput = document.getElementById('console-output');
+  consoleOutput.innerText = `値: ${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)}, ${a.toFixed(2)}`;
 }
 
 /**
@@ -429,6 +484,7 @@ async function getMicrophoneDevices() {
     const audioInputs = devices.filter(device => device.kind === 'audioinput');
 
     const microphoneSelect = document.getElementById('microphone-select');
+    microphoneSelect.innerHTML = '<option value="">マイクを選択</option>'; // 初期化
     audioInputs.forEach(device => {
       const option = document.createElement('option');
       option.value = device.deviceId;
@@ -521,7 +577,7 @@ function updateAudioTexture() {
 function startTrackingUsage() {
   setInterval(() => {
     const session = JSON.parse(localStorage.getItem('session'));
-    if (!session) return;
+    if (!session || !session.isLoggedIn) return;
 
     const usageTime = 300; // 5分（300秒）
     const updateCount = 1; // 1回の更新
@@ -557,18 +613,78 @@ function startTrackingUsage() {
  * イベントリスナーの設定
  */
 function setupEventListeners() {
-  document.getElementById('save-btn').addEventListener('click', saveCode);
-  document.getElementById('load-btn').addEventListener('click', () => {
-    const modal = document.getElementById('load-modal');
-    updateSavedShadersList();
-    modal.style.display = 'block';
+  const saveBtn = document.getElementById('save-btn');
+  const loadBtn = document.getElementById('load-btn');
+  const loadSavedBtn = document.getElementById('load-saved-btn');
+  const popupBtn = document.getElementById('popup-btn');
+  const applyResolutionBtn = document.getElementById('apply-resolution-btn');
+  const toggleEditorBtn = document.getElementById('toggle-editor-btn');
+  const microphoneSelect = document.getElementById('microphone-select');
+  const sampleSelect = document.getElementById('sample-select');
+  const continueWithoutTrackingBtn = document.getElementById('continue-without-tracking-btn');
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', saveCode);
+  }
+
+  if (loadBtn) {
+    loadBtn.addEventListener('click', () => {
+      const modal = document.getElementById('load-modal');
+      updateSavedShadersList();
+      modal.classList.remove('hidden');
+    });
+  }
+
+  if (loadSavedBtn) {
+    loadSavedBtn.addEventListener('click', loadSavedCodeFromList);
+  }
+
+  if (popupBtn) {
+    popupBtn.addEventListener('click', openPopup);
+  }
+
+  if (applyResolutionBtn) {
+    applyResolutionBtn.addEventListener('click', applyResolution);
+  }
+
+  if (toggleEditorBtn) {
+    toggleEditorBtn.addEventListener('click', toggleEditor);
+  }
+
+  if (microphoneSelect) {
+    microphoneSelect.addEventListener('change', startMicrophone);
+  }
+
+  if (sampleSelect) {
+    sampleSelect.addEventListener('change', loadSampleCode);
+  }
+
+  if (continueWithoutTrackingBtn) {
+    continueWithoutTrackingBtn.addEventListener('click', () => {
+      // ログイン画面を非表示にしてエディターを表示
+      document.getElementById('auth-container').style.display = 'none';
+      showMainContainer();
+
+      // トラッキングを無効化
+      localStorage.removeItem('session');
+    });
+  }
+
+  // モーダルの閉じるボタン設定
+  const modal = document.getElementById('load-modal');
+  const closeBtn = modal.querySelector('.close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+  }
+
+  // モーダル外クリックで閉じる
+  window.addEventListener('click', (event) => {
+    if (event.target == modal) {
+      modal.classList.add('hidden');
+    }
   });
-  document.getElementById('load-saved-btn').addEventListener('click', loadSavedCodeFromList);
-  document.getElementById('popup-btn').addEventListener('click', openPopup);
-  document.getElementById('apply-resolution-btn').addEventListener('click', applyResolution);
-  document.getElementById('toggle-editor-btn').addEventListener('click', toggleEditor);
-  document.getElementById('microphone-select').addEventListener('change', startMicrophone);
-  document.getElementById('sample-select').addEventListener('change', loadSampleCode);
 }
 
 /**
@@ -581,20 +697,33 @@ async function loadSampleCode() {
   if (selectedSample === '') return;
 
   try {
-    showSpinner(); // スピナー表示
-
     const response = await fetch(selectedSample);
     if (!response.ok) {
       throw new Error(`サンプルコードの読み込みに失敗しました: ${response.statusText}`);
     }
     const shaderCode = await response.text();
     editor.setValue(shaderCode);
-
-    hideSpinner(); // スピナー非表示
-
     alert('サンプルコードが読み込まれました。');
   } catch (error) {
-    hideSpinner(); // スピナー非表示
+    console.error('サンプルコード読み込みエラー:', error);
+    alert('サンプルコードの読み込み中にエラーが発生しました。');
+  }
+}
+
+/**
+ * 指定されたURLからサンプルコードを読み込む
+ * @param {string} url - サンプルコードのURL
+ */
+async function loadSampleCodeFromURL(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`サンプルコードの読み込みに失敗しました: ${response.statusText}`);
+    }
+    const shaderCode = await response.text();
+    editor.setValue(shaderCode);
+    alert(`サンプルコード「${url}」が自動的に読み込まれました。`);
+  } catch (error) {
     console.error('サンプルコード読み込みエラー:', error);
     alert('サンプルコードの読み込み中にエラーが発生しました。');
   }
@@ -660,6 +789,7 @@ function loadSavedCodeFromList() {
   if (code) {
     editor.setValue(code);
     alert(`コード「${selectedKey.replace('shader_', '')}」がロードされました。`);
+    document.getElementById('load-modal').classList.add('hidden');
   } else {
     alert('選択されたコードが見つかりません。');
   }
@@ -669,24 +799,23 @@ function loadSavedCodeFromList() {
  * ロードモーダルの設定
  */
 function setupLoadModal() {
-  const loadBtn = document.getElementById('load-btn');
   const modal = document.getElementById('load-modal');
   const closeBtn = modal.querySelector('.close');
 
   closeBtn.addEventListener('click', () => {
-    modal.style.display = 'none';
+    modal.classList.add('hidden');
   });
 
   // モーダル外クリックで閉じる
   window.addEventListener('click', (event) => {
     if (event.target == modal) {
-      modal.style.display = 'none';
+      modal.classList.add('hidden');
     }
   });
 }
 
 /**
- * ポップアップウィンドウの開設とシェーダーコードの送信
+ * ポップアップウィンドウの開設とレンダリング結果の送信
  */
 function openPopup() {
   if (popupWindow && !popupWindow.closed) {
@@ -694,7 +823,9 @@ function openPopup() {
     return;
   }
 
-  popupWindow = window.open('', 'popupWindow', 'width=800,height=600');
+  popupWindow = window.open('', 'popupWindow', `width=${maxResolution.width},height=${maxResolution.height}`);
+
+  // ポップアップウィンドウにHTMLを挿入
   popupWindow.document.write(`
     <!DOCTYPE html>
     <html lang="ja">
@@ -703,156 +834,27 @@ function openPopup() {
       <title>ポップアップレンダリング結果</title>
       <style>
         body { margin: 0; background-color: #000; }
-        canvas { display: block; }
+        img { width: 100%; height: 100%; object-fit: contain; }
       </style>
     </head>
     <body>
-      <canvas id="popup-canvas" width="${canvasWidth}" height="${canvasHeight}"></canvas>
+      <img id="render-result" src="" alt="Render Result">
       <script>
-        const canvas = document.getElementById('popup-canvas');
-        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-        if (!gl) {
-          alert('WebGLがサポートされていません。');
-        }
-
-        let program = null;
-
         window.addEventListener('message', function(event) {
-          if (event.data.type === 'shaderCode') {
-            compileAndRender(event.data.code, gl, canvas.width, canvas.height);
+          if (event.data.type === 'renderResult') {
+            const img = document.getElementById('render-result');
+            img.src = event.data.data;
           }
         });
-
-        function compileAndRender(shaderSource, gl, width, height) {
-          let completeShaderSource = shaderSource;
-          
-          // main関数の自動挿入
-          if (!/void\\s+main\\s*\\(/.test(completeShaderSource)) {
-            completeShaderSource += \`
-            
-            void main() {
-              mainImage(gl_FragColor, gl_FragCoord.xy);
-            }
-            \`;
-          }
-
-          const vertexShaderSource = \`
-            attribute vec4 position;
-            void main() {
-              gl_Position = position;
-            }
-          \`;
-
-          // シェーダーのコンパイルとエラーチェック
-          const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-          const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, completeShaderSource);
-
-          if (!vertexShader || !fragmentShader) return;
-
-          // プログラムのリンク
-          const newProgram = createProgram(gl, vertexShader, fragmentShader);
-          if (newProgram) {
-            program = newProgram;
-            gl.useProgram(program);
-            setupBuffers();
-            setBuiltInUniforms(gl, program, width, height);
-            renderPopup();
-          }
-        }
-
-        function createShader(gl, type, source) {
-          const shader = gl.createShader(type);
-          gl.shaderSource(shader, source);
-          gl.compileShader(shader);
-          
-          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            const error = gl.getShaderInfoLog(shader);
-            console.error('シェーダーコンパイルエラー:', error);
-            gl.deleteShader(shader);
-            return null;
-          }
-          return shader;
-        }
-
-        function createProgram(gl, vs, fs) {
-          const program = gl.createProgram();
-          gl.attachShader(program, vs);
-          gl.attachShader(program, fs);
-          gl.linkProgram(program);
-          
-          if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            const error = gl.getProgramInfoLog(program);
-            console.error('プログラムリンクエラー:', error);
-            gl.deleteProgram(program);
-            return null;
-          }
-          return program;
-        }
-
-        let positionBuffer = null;
-
-        function setupBuffers() {
-          if (!program) return;
-
-          const positionAttributeLocation = gl.getAttribLocation(program, 'position');
-          positionBuffer = gl.createBuffer();
-          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-          const positions = [
-            -1, -1,
-             1, -1,
-            -1,  1,
-            -1,  1,
-             1, -1,
-             1,  1,
-          ];
-          gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-          gl.enableVertexAttribArray(positionAttributeLocation);
-          gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
-        }
-
-        function setBuiltInUniforms(gl, program, width, height) {
-          const iResolutionLocation = gl.getUniformLocation(program, 'iResolution');
-          if (iResolutionLocation) {
-            gl.uniform3f(iResolutionLocation, width, height, 1.0);
-          }
-
-          const iTimeLocation = gl.getUniformLocation(program, 'iTime');
-          if (iTimeLocation) {
-            const startTime = performance.now();
-            function updateTime() {
-              const currentTime = (performance.now() - startTime) / 1000;
-              gl.uniform1f(iTimeLocation, currentTime);
-              requestAnimationFrame(updateTime);
-            }
-            updateTime();
-          }
-
-          const iMouseLocation = gl.getUniformLocation(program, 'iMouse');
-          if (iMouseLocation) {
-            gl.uniform4f(iMouseLocation, 0.0, 0.0, 0.0, 0.0);
-          }
-        }
-
-        function renderPopup() {
-          if (!program) return;
-
-          gl.useProgram(program);
-
-          gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-          gl.clear(gl.COLOR_BUFFER_BIT);
-          gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-          requestAnimationFrame(renderPopup);
-        }
       </script>
     </body>
     </html>
   `);
 
-  // 初回シェーダーコードの送信
-  if (popupWindow && !popupWindow.closed) {
-    popupWindow.postMessage({ type: 'shaderCode', code: editor.getValue() }, '*');
-  }
+  // ポップアップの解像度に合わせてエディターの解像度も調整
+  canvasWidth = maxResolution.width;
+  canvasHeight = maxResolution.height;
+  resizeCanvas();
 }
 
 /**
@@ -861,8 +863,16 @@ function openPopup() {
 function applyResolution() {
   const widthInput = document.getElementById('resolution-width');
   const heightInput = document.getElementById('resolution-height');
-  canvasWidth = parseInt(widthInput.value);
-  canvasHeight = parseInt(heightInput.value);
+  const newWidth = parseInt(widthInput.value);
+  const newHeight = parseInt(heightInput.value);
+
+  if (isNaN(newWidth) || isNaN(newHeight) || newWidth <= 0 || newHeight <= 0) {
+    alert('有効な解像度を入力してください。');
+    return;
+  }
+
+  canvasWidth = newWidth;
+  canvasHeight = newHeight;
   resizeCanvas();
 }
 
@@ -882,10 +892,13 @@ function resizeCanvas() {
 function toggleEditor() {
   isEditorVisible = !isEditorVisible;
   const editorContainer = document.getElementById('editor-container');
+  const consoleContainer = document.getElementById('console-container');
   if (isEditorVisible) {
     editorContainer.classList.remove('hidden');
+    consoleContainer.classList.remove('hidden');
   } else {
     editorContainer.classList.add('hidden');
+    consoleContainer.classList.add('hidden');
   }
 }
 
@@ -893,7 +906,7 @@ function toggleEditor() {
  * エラーメッセージの表示
  */
 function showError(error) {
-  document.getElementById('console-output').innerText = error;
+  document.getElementById('console-output').innerText = `エラー: ${error}`;
 }
 
 /**
@@ -908,15 +921,83 @@ function debounce(func, wait) {
 }
 
 /**
- * スピナーの表示
+ * ポップアップでのレンダリング結果の受信（不要な場合は削除可）
  */
-function showSpinner() {
-  document.getElementById('spinner').style.display = 'block';
+// この部分は不要です。ポップアップ側で処理します。
+
+/**
+ * printValuesの取得とコンソール出力
+ */
+function readPrintValues() {
+  // マウス位置のピクセルを取得
+  const x = Math.floor(mouseX);
+  const y = Math.floor(mouseY);
+
+  // ピクセルがキャンバス範囲内か確認
+  if (x < 0 || x >= gl.canvas.width || y < 0 || y >= gl.canvas.height) {
+    return;
+  }
+
+  // フロートテクスチャを有効にする必要があるため、WebGL2のみ対応
+  if (!gl.getExtension('EXT_color_buffer_float')) {
+    console.warn('EXT_color_buffer_floatがサポートされていません。print機能が無効です。');
+    return;
+  }
+
+  const pixels = new Float32Array(4);
+  gl.readPixels(x, y, 1, 1, gl.RGBA, gl.FLOAT, pixels);
+
+  const r = pixels[0];
+  const g = pixels[1];
+  const b = pixels[2];
+  const a = pixels[3];
+
+  const consoleOutput = document.getElementById('console-output');
+  consoleOutput.innerText = `値: ${r.toFixed(2)}, ${g.toFixed(2)}, ${b.toFixed(2)}, ${a.toFixed(2)}`;
 }
 
 /**
- * スピナーの非表示
+ * コントロールコンテナの表示
  */
-function hideSpinner() {
-  document.getElementById('spinner').style.display = 'none';
+function showMainContainer() {
+  document.getElementById('auth-container').style.display = 'none';
+  document.getElementById('main-container').classList.remove('hidden');
+}
+
+/**
+ * 使用時間のトラッキング開始
+ */
+function startTrackingUsage() {
+  setInterval(() => {
+    const session = JSON.parse(localStorage.getItem('session'));
+    if (!session || !session.isLoggedIn) return;
+
+    const usageTime = 300; // 5分（300秒）
+    const updateCount = 1; // 1回の更新
+
+    const data = new URLSearchParams();
+    data.append('action', 'updateUsage');
+    data.append('nickname', session.nickname);
+    data.append('usageTime', usageTime);
+    data.append('updateCount', updateCount);
+
+    fetch('https://script.google.com/macros/s/AKfycbynrTZxEGbsEYWQSPzYlhV2VRW42krn2kwr6T74uJ0V7biEKbPcgE50B6mBX4LkyHBblw/exec', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: data.toString()
+    })
+    .then(response => response.json())
+    .then(result => {
+      if (result.success) {
+        console.log('使用時間トラッキング成功:', result.message);
+      } else {
+        console.error('使用時間トラッキング失敗:', result.message);
+      }
+    })
+    .catch(error => {
+      console.error('使用時間トラッキングエラー:', error);
+    });
+});
 }

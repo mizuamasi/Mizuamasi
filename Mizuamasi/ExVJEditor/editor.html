@@ -4,102 +4,29 @@
   <meta charset="UTF-8">
   <title>シェーダーエディター</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- CodeMirrorのスタイル -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
-  <style>
-    /* モーダルのスタイル */
-    .modal {
-      display: none; /* 初期状態は非表示 */
-      position: fixed;
-      z-index: 100;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.5);
-    }
-    
-    .modal-content {
-      background-color: #222;
-      margin: 10% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 50%;
-      color: #fff;
-    }
-    
-    .modal-content ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    
-    .modal-content li {
-      padding: 10px;
-      border-bottom: 1px solid #444;
-      cursor: pointer;
-    }
-    
-    .modal-content li:hover {
-      background-color: #333;
-    }
-    
-    .close {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    
-    .close:hover,
-    .close:focus {
-      color: #fff;
-      text-decoration: none;
-    }
-
-    /* スピナーのスタイル */
-    .spinner {
-      display: none; /* 初期状態は非表示 */
-      width: 40px;
-      height: 40px;
-      border: 5px solid rgba(0, 0, 0, 0.1);
-      border-top-color: #3498db;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 200;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  </style>
 </head>
 <body>
   <!-- 上部ツールバー -->
   <div id="toolbar">
     <button id="save-btn">保存</button>
     <button id="load-btn">読み出し</button>
-    <button id="toggle-editor-btn">エディタ表示/非表示</button>
-    <!-- マイク設定 -->
+    <button id="toggle-editor-btn">エディター切替</button>
     <label for="microphone-select">マイク選択:</label>
     <select id="microphone-select">
       <option value="">マイクを選択</option>
     </select>
     <!-- 解像度設定 -->
-    出力解像度:
+    <label for="resolution-width">出力解像度:</label>
     <input type="number" id="resolution-width" value="1920" min="1"> x
     <input type="number" id="resolution-height" value="1080" min="1">
     <button id="apply-resolution-btn">適用</button>
     <!-- ポップアップボタン -->
     <button id="popup-btn">ポップアップ表示</button>
     <!-- サンプルコード選択 -->
-    <label for="sample-select">サンプルコード:</label>
+    <label for="sample-select">サンプルシェーダー:</label>
     <select id="sample-select">
       <option value="">サンプルを選択</option>
       <option value="SampleCode/sample1.frag">Sample 1</option>
@@ -114,21 +41,7 @@
     </select>
     <button id="load-saved-btn">ロード</button>
   </div>
-
-  <!-- スピナー要素 -->
-  <div id="spinner" class="spinner"></div>
-
-  <!-- ロードモーダル -->
-  <div id="load-modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>保存されたシェーダーコード</h2>
-      <ul id="saved-shaders-list">
-        <!-- 保存されたコードのリストをここに動的に追加 -->
-      </ul>
-    </div>
-  </div>
-
+  
   <!-- メインコンテナ -->
   <div id="main-container">
     <!-- 左側のコンテナ（エディタとコンソール） -->
@@ -143,25 +56,33 @@
         <div id="console-output"></div>
       </div>
     </div>
-    <!-- コントロールパネル -->
+    
+    <!-- 右側のコンテナ（コントロールパネル） -->
     <div id="control-container">
       <h2>Uniform コントロール</h2>
       <div id="uniform-controls">
-        <!-- Uniform コントロールをここに動的に追加 -->
+        <!-- JavaScriptで動的にコントロールを追加 -->
       </div>
     </div>
   </div>
-
+  
   <!-- レンダリングキャンバス -->
   <canvas id="render-canvas"></canvas>
-
-  <!-- ボタン類 -->
-  <button id="save-btn-bottom">保存</button>
-  <button id="popup-btn-bottom">ポップアップ表示</button>
-
-  <!-- JavaScriptライブラリ -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/clike/clike.min.js"></script>
+  
+  <!-- ロードモーダル -->
+  <div id="load-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>保存されたシェーダーコード</h2>
+      <ul id="saved-shaders-list">
+        <!-- 保存されたコードのリストをここに動的に追加 -->
+      </ul>
+    </div>
+  </div>
+  
+  <!-- スピナー要素（不要な場合は削除） -->
+  <div id="spinner" class="spinner"></div>
+  
   <script src="editor.js"></script>
 </body>
 </html>
