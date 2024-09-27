@@ -11,8 +11,29 @@
     
     <div class="code-block">
         <pre><code class="language-glsl">
-// スクリーン座標を正規化
-vec2 uv = fragCoord / iResolution.xy;
+uniform vec3 iResolution;
+uniform float iTime;
+uniform bool showCoordinates;
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    //スクリーン座標を正規化
+    vec2 uv = fragCoord / iResolution.xy;
+    // 中央を(0,0)にシフト
+    vec2 centered = uv - 0.5;
+    // グラデーションを中央から放射状に
+    float dist = length(centered);
+    vec3 color = vec3(dist, 0.5, 1.0 - dist);
+    
+    if(showCoordinates){
+        color = vec3(uv, 0.5 + 0.5 * sin(iTime));
+    }
+    
+    fragColor = vec4(color, 1.0);
+}
+
+void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+}`
         </code></pre>
     </div>
     

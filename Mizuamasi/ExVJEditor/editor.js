@@ -4,8 +4,8 @@ let editor;
 let gl;
 let program;
 let lastValidProgram = null;
-let canvasWidth = window.innerWidth;
-let canvasHeight = window.innerHeight;
+let canvasWidth = 800; // 初期値
+let canvasHeight = 600; // 初期値
 let isEditorVisible = true;
 let isTracking = true;
 
@@ -34,15 +34,23 @@ window.onload = function() {
   loadCode();
   getMicrophoneDevices();
   
+  // 認証が完了しているか確認
   const session = JSON.parse(localStorage.getItem('session'));
   if (session && session.isLoggedIn) {
-    startTrackingUsage();
     showMainContainer();
-    updateTrackingStatus(true);
+    if (isTracking) {
+      startTrackingUsage();
+      updateTrackingStatus(true);
+    }
   } else {
-    // auth-container が存在しない場合は無視
-    showMainContainer(); // 認証がない場合は直接メインコンテナを表示
-    updateTrackingStatus(false);
+    alert('認証されていません。index.htmlに戻ります。');
+    window.location.href = 'index.html';
+  }
+  
+  // キャンバス解像度設定イベントリスナー
+  const setResolutionBtn = document.getElementById('set-resolution-btn');
+  if (setResolutionBtn) {
+    setResolutionBtn.addEventListener('click', setCanvasResolution);
   }
 };
 
@@ -102,6 +110,18 @@ function compileShader() {
     shaderSource = 'precision mediump float;\n' + shaderSource;
   }
 
+  // #version が存在しない場合、#version 300 es を追加
+  if (!/^#version\s+\d+\s+\w+/.test(shaderSource)) {
+    shaderSource = '#version 300 es\n' + shaderSource;
+  }
+
+  // WebGL 2.0では出力変数を宣言する必要があります
+  // 既に出力変数が定義されていない場合、追加します
+  const hasFragColor = /out\s+vec4\s+fragColor\s*;/.test(shaderSource);
+  if (!hasFragColor) {
+    shaderSource = shaderSource.replace(/void\s+mainImage\s*\(/, 'out vec4 fragColor;\nvoid mainImage(');
+  }
+
   // シェーダー内に main 関数が存在するか確認
   const hasMain = /void\s+main\s*\(/.test(shaderSource);
 
@@ -109,9 +129,23 @@ function compileShader() {
     // main 関数が存在しない場合、mainImage を呼び出す main 関数を追加
     shaderSource += `
 void main() {
-    mainImage(gl_FragColor, gl_FragCoord.xy);
+    mainImage(fragColor, fragCoord);
 }
 `;
+  }
+
+  // シェーダー内に 'fragCoord' を定義していない場合、定義を追加
+  const hasFragCoord = /in\s+vec2\s+fragCoord\s*;/.test(shaderSource);
+  if (!hasFragCoord) {
+    shaderSource = shaderSource.replace(/void\s+mainImage\s*\(/, 'in vec2 fragCoord;\nvoid mainImage(');
+  }
+
+  // シェーダー内に 'fragCoord' を宣言しているか確認
+  const hasFragCoordDeclaration = /in\s+vec2\s+fragCoord\s*;/.test(shaderSource);
+
+  if (!hasFragCoordDeclaration) {
+    // 'fragCoord' の宣言がない場合、追加
+    shaderSource = shaderSource.replace(/void\s+main\s*\(/, 'in vec2 fragCoord;\nvoid main(');
   }
 
   document.getElementById('console-output').innerText = '';
@@ -119,8 +153,10 @@ void main() {
   const vertexShaderSource = `#version 300 es
 precision highp float;
 layout(location = 0) in vec2 position;
+out vec2 fragCoord;
 void main() {
   gl_Position = vec4(position, 0.0, 1.0);
+  fragCoord = (position + 1.0) / 2.0 * vec2(${canvasWidth.toFixed(1)}, ${canvasHeight.toFixed(1)});
 }`;
 
   const vertexShader = createShader(gl.VERTEX_SHADER, vertexShaderSource);
@@ -134,7 +170,7 @@ void main() {
     lastValidProgram = newProgram;
     render();
     // コードを保存
-    saveCodeToLocalStorage();
+   // saveCodeToLocalStorage();
   } else {
     if (lastValidProgram) {
       program = lastValidProgram;
@@ -180,7 +216,11 @@ function createProgram(vs, fs) {
 
 /**
  * レンダリング関数
+ * ポップアップへのレンダリング結果送信を最適化
  */
+let lastPopupUpdate = 0;
+const popupUpdateInterval = 40; // 1秒ごとに送信
+
 function render() {
   if (!program) return;
 
@@ -215,12 +255,15 @@ function render() {
   // WebGLレンダリング結果をエディターの背景に設定
   setEditorBackground();
 
-  requestAnimationFrame(render);
-
-  if (popupWindow && !popupWindow.closed) {
+  // ポップアップへの送信を制限
+  const now = Date.now();
+  if (popupWindow && !popupWindow.closed && (now - lastPopupUpdate) > popupUpdateInterval) {
     const dataURL = gl.canvas.toDataURL();
     popupWindow.postMessage({ type: 'renderResult', data: dataURL }, '*');
+    lastPopupUpdate = now;
   }
+
+  requestAnimationFrame(render);
 }
 
 /**
@@ -285,12 +328,19 @@ async function getMicrophoneDevices() {
 
     const microphoneSelect = document.getElementById('microphone-select');
     microphoneSelect.innerHTML = '<option value="">マイクを選択</option>'; // 初期化
-    audioInputs.forEach(device => {
+    if (audioInputs.length === 0) {
       const option = document.createElement('option');
-      option.value = device.deviceId;
-      option.text = device.label || `マイクデバイス ${microphoneSelect.length}`;
+      option.value = '';
+      option.text = 'マイクが見つかりません';
       microphoneSelect.appendChild(option);
-    });
+    } else {
+      audioInputs.forEach(device => {
+        const option = document.createElement('option');
+        option.value = device.deviceId;
+        option.text = device.label || `マイクデバイス ${microphoneSelect.length}`;
+        microphoneSelect.appendChild(option);
+      });
+    }
   } catch (err) {
     console.error('デバイス取得エラー:', err);
   }
@@ -307,9 +357,14 @@ async function startMicrophone(deviceId) {
   }
 
   try {
+    // マイクの設定を自動でモノラルとステレオの両方を取得するように設定
     microphoneStream = await navigator.mediaDevices.getUserMedia({
       audio: {
-        deviceId: deviceId
+        deviceId: deviceId,
+        channelCount: { ideal: 2 }, // ステレオを優先
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
       }
     });
 
@@ -382,9 +437,12 @@ function startTrackingUsage() {
     const usageTime = 300; // 5分（300秒）
     const updateCount = 1; // 1回の更新
 
+    const session = JSON.parse(localStorage.getItem('session'));
+    const nickname = session ? session.nickname : 'unknown';
+
     const data = new URLSearchParams();
     data.append('action', 'updateUsage');
-    data.append('nickname', localStorage.getItem('nickname') || 'unknown');
+    data.append('nickname', nickname);
     data.append('usageTime', usageTime);
     data.append('updateCount', updateCount);
 
@@ -464,7 +522,7 @@ function setupEventListeners() {
     micToggleBtn.addEventListener('click', toggleMicrophone);
   }
 
-  // モーダルの閉じるボタン設定
+  // ロードモーダルの閉じるボタン設定
   const modal = document.getElementById('load-modal');
   const closeBtn = modal.querySelector('.close');
   if (closeBtn) {
@@ -513,12 +571,19 @@ function loadCode() {
 }
 
 /**
- * コードの保存（localStorage）
+ * コードの保存（localStorage） - 名前付き保存
  */
 function saveCodeToLocalStorage() {
   const code = editor.getValue();
-  localStorage.setItem('savedCode', code);
-  alert('コードが保存されました。');
+  const name = prompt('保存するシェーダーの名前を入力してください:');
+  
+  if (name) {
+    const key = `shader_${name}`;
+    localStorage.setItem(key, code);
+    alert(`コード「${name}」が保存されました。`);
+  } else {
+    alert('保存がキャンセルされました。');
+  }
 }
 
 /**
@@ -572,7 +637,7 @@ function openPopup() {
   }
 
   popupWindow = window.open('', 'popupWindow', `width=${maxResolution.width},height=${maxResolution.height}`);
-
+  
   popupWindow.document.write(`
     <!DOCTYPE html>
     <html lang="ja">
@@ -597,9 +662,14 @@ function openPopup() {
     </body>
     </html>
   `);
-
-  canvasWidth = maxResolution.width;
-  canvasHeight = maxResolution.height;
+  
+  // 初回レンダリング後に送信
+  popupWindow.onload = function() {
+    const dataURL = gl.canvas.toDataURL();
+    popupWindow.postMessage({ type: 'renderResult', data: dataURL }, '*');
+    lastPopupUpdate = Date.now();
+  };
+  
   resizeCanvas();
 }
 
@@ -709,12 +779,34 @@ function updateMicrophoneStatus(status) {
 }
 
 /**
- * コントロールコンテナの表示
- * 現在の editor.html には auth-container が存在しないため、この関数はメインコンテナを表示するだけです
+ * 認証コンテナの表示
  */
 function showMainContainer() {
+  const toolbar = document.getElementById('toolbar');
   const mainContainer = document.getElementById('main-container');
-  if (mainContainer) {
+  if (toolbar && mainContainer) {
+    toolbar.classList.remove('hidden');
     mainContainer.classList.remove('hidden');
   }
+}
+
+/**
+ * キャンバスの解像度を設定する関数
+ */
+function setCanvasResolution() {
+  const widthInput = document.getElementById('canvas-width').value;
+  const heightInput = document.getElementById('canvas-height').value;
+  
+  const width = parseInt(widthInput);
+  const height = parseInt(heightInput);
+  
+  if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
+    alert('有効な解像度を入力してください。');
+    return;
+  }
+  
+  canvasWidth = width;
+  canvasHeight = height;
+  resizeCanvas();
+  compileShader(); // 再コンパイル
 }

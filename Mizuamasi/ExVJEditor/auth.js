@@ -1,113 +1,114 @@
 // auth.js
 
-document.getElementById('register-btn').addEventListener('click', register);
-document.getElementById('login-btn').addEventListener('click', login);
+document.addEventListener('DOMContentLoaded', () => {
+  const loginBtn = document.getElementById('login-btn');
+  const registerBtn = document.getElementById('register-btn');
+  const continueWithoutTrackingBtn = document.getElementById('continue-without-tracking-btn');
+  
+  loginBtn.addEventListener('click', handleLogin);
+  registerBtn.addEventListener('click', handleRegister);
+  continueWithoutTrackingBtn.addEventListener('click', handleContinueWithoutTracking);
+});
 
-/**
- * ユーザー登録関数
- */
-async function register() {
-  const nickname = document.getElementById('nickname').value.trim();
-  const password = document.getElementById('password').value.trim();
-  const spinner = document.getElementById('auth-spinner');
+function handleLogin() {
+  const nickname = document.getElementById('nickname-input').value.trim();
+  const password = document.getElementById('password-input').value.trim();
 
-  if (!validateNickname(nickname) || !validatePassword(password)) {
-    alert('ニックネームまたはパスワードが無効です。');
+  if (!nickname || !password) {
+    alert('ニックネームとパスワードを入力してください。');
     return;
   }
 
-  try {
-    // スピナーを表示
-    spinner.style.display = 'block';
+  showSpinner();
 
-    const data = new URLSearchParams();
-    data.append('action', 'register');
-    data.append('nickname', nickname);
-    data.append('password', password);
+  // 認証APIへのリクエスト（例）
+  const data = new URLSearchParams();
+  data.append('action', 'login');
+  data.append('nickname', nickname);
+  data.append('password', password);
 
-    const response = await fetch('https://script.google.com/macros/s/AKfycbynrTZxEGbsEYWQSPzYlhV2VRW42krn2kwr6T74uJ0V7biEKbPcgE50B6mBX4LkyHBblw/exec', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: data.toString()
-    });
-
-    const result = await response.json();
-
+  fetch('https://script.google.com/macros/s/AKfycbynrTZxEGbsEYWQSPzYlhV2VRW42krn2kwr6T74uJ0V7biEKbPcgE50B6mBX4LkyHBblw/exec', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: data.toString()
+  })
+  .then(response => response.json())
+  .then(result => {
     if (result.success) {
-      alert('登録が完了しました。ログインしてください。');
-    } else {
-      alert('登録に失敗しました: ' + result.message);
-    }
-  } catch (error) {
-    console.error('登録エラー:', error);
-    alert('登録中にエラーが発生しました。');
-  } finally {
-    // スピナーを非表示
-    spinner.style.display = 'none';
-  }
-}
-
-/**
- * ユーザーログイン関数
- */
-async function login() {
-  const nickname = document.getElementById('nickname').value.trim();
-  const password = document.getElementById('password').value.trim();
-  const spinner = document.getElementById('auth-spinner');
-
-  try {
-    // スピナーを表示
-    spinner.style.display = 'block';
-
-    const data = new URLSearchParams();
-    data.append('action', 'login');
-    data.append('nickname', nickname);
-    data.append('password', password);
-
-    const response = await fetch('https://script.google.com/macros/s/AKfycbynrTZxEGbsEYWQSPzYlhV2VRW42krn2kwr6T74uJ0V7biEKbPcgE50B6mBX4LkyHBblw/exec', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: data.toString()
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      // ローカルストレージにセッション情報を保存
-      localStorage.setItem('session', JSON.stringify({ nickname: nickname }));
-      // エディター画面に遷移
+      // セッション情報を保存（例）
+      localStorage.setItem('session', JSON.stringify({ isLoggedIn: true, nickname: nickname }));
       window.location.href = 'editor.html';
     } else {
-      alert('ログインに失敗しました: ' + result.message);
+      handleAuthFailure(result.message);
     }
-  } catch (error) {
+  })
+  .catch(error => {
     console.error('ログインエラー:', error);
-    alert('ログイン中にエラーが発生しました。');
-  } finally {
-    // スピナーを非表示
-    spinner.style.display = 'none';
+    handleAuthFailure('ネットワークエラー');
+  });
+}
+
+function handleRegister() {
+  const nickname = document.getElementById('nickname-input').value.trim();
+  const password = document.getElementById('password-input').value.trim();
+
+  if (!nickname || !password) {
+    alert('ニックネームとパスワードを入力してください。');
+    return;
+  }
+
+  showSpinner();
+
+  // 登録APIへのリクエスト（例）
+  const data = new URLSearchParams();
+  data.append('action', 'register');
+  data.append('nickname', nickname);
+  data.append('password', password);
+
+  fetch('https://script.google.com/macros/s/AKfycbynrTZxEGbsEYWQSPzYlhV2VRW42krn2kwr6T74uJ0V7biEKbPcgE50B6mBX4LkyHBblw/exec', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: data.toString()
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      alert('登録が成功しました。ログインしてください。');
+      hideSpinner();
+    } else {
+      handleAuthFailure(result.message);
+    }
+  })
+  .catch(error => {
+    console.error('登録エラー:', error);
+    handleAuthFailure('ネットワークエラー');
+  });
+}
+
+function handleContinueWithoutTracking() {
+  // セッションを設定しない
+  window.location.href = 'editor.html';
+}
+
+function handleAuthFailure(message) {
+  alert(`認証に失敗しました: ${message}`);
+  hideSpinner();
+}
+
+function showSpinner() {
+  const spinner = document.getElementById('auth-spinner');
+  if (spinner) {
+    spinner.classList.remove('hidden');
   }
 }
 
-/**
- * ニックネームのバリデーション関数
- * @param {string} nickname - ニックネーム
- * @return {boolean} - バリデーション結果
- */
-function validateNickname(nickname) {
-  const invalidChars = /[\/\\\?\%\*\:\|\\"<>\s]/;
-  return !invalidChars.test(nickname) && nickname.length > 0;
-}
-
-/**
- * パスワードのバリデーション関数
- * @param {string} password - パスワード
- * @return {boolean} - バリデーション結果
- */
-function validatePassword(password) {
-  return password.length > 0;
+function hideSpinner() {
+  const spinner = document.getElementById('auth-spinner');
+  if (spinner) {
+    spinner.classList.add('hidden');
+  }
 }

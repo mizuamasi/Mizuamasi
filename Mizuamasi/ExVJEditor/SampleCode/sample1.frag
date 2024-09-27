@@ -12,6 +12,4 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     fragColor = vec4(color, 1.0);
 }
 
-void main() {
-    mainImage(gl_FragColor, gl_FragCoord.xy);
-}
+

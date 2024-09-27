@@ -15,7 +15,7 @@
 </head>
 <body>
   <!-- 上部ツールバー -->
-  <div id="toolbar">
+  <div id="toolbar" class="hidden">
     <!-- トラッキング状態表示 -->
     <span id="tracking-status" title="使用状況">
       <i class="fas fa-eye-slash"></i> トラッキング: OFF
@@ -51,7 +51,7 @@
       <i class="fas fa-external-link-alt"></i>
     </button>
     
-    <!-- 右側にサンプル選択とマイク選択を配置 -->
+    <!-- 右側にサンプル選択とマイク選択、解像度設定を配置 -->
     <div class="toolbar-right">
       <select id="sample-select" title="サンプルシェーダーを選択">
         <option value="">サンプルを選択</option>
@@ -61,11 +61,15 @@
       <select id="microphone-select" title="マイクを選択">
         <option value="">マイクを選択</option>
       </select>
+      <!-- 解像度入力フィールド -->
+      <input type="number" id="canvas-width" placeholder="幅" min="100" value="800">
+      <input type="number" id="canvas-height" placeholder="高さ" min="100" value="600">
+      <button id="set-resolution-btn" title="解像度を設定">設定</button>
     </div>
   </div>
 
   <!-- メインコンテナ -->
-  <div id="main-container">
+  <div id="main-container" class="hidden">
     <!-- レンダリングキャンバス -->
     <canvas id="render-canvas"></canvas>
     

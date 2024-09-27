@@ -3,16 +3,51 @@
     <h2>VJとは</h2>
     <p>VJ（ビジュアルジョッキー）は、音楽に合わせてリアルタイムで視覚効果を操作するパフォーマンスです。音楽とビジュアルがシンクロすることで、観客に強いインパクトを与えます。</p>
     
-    <div class="image-container">
+    <!-- <div class="image-container">
         <img src="images/vj-example.jpg" alt="VJパフォーマンスの例">
-    </div>
+    </div> -->
     
     <p>VJパフォーマンスでは、音楽のリズムやメロディに合わせてシェーダーを調整します。例えば、ビートに合わせて色が変わったり、音の強弱に応じて形が変形したりします。これにより、視覚的にも音楽的にも一体感のあるパフォーマンスが実現します。</p>
     
     <h3>ピクセルの視点</h3>
-    <p>あなたは音楽に合わせて動くピクセルです。音のビートやメロディに応じて、指揮官から新しい指示を受け取ります。指示には色の変化や形の変形が含まれており、あなたはそれに従って自分の色を更新します。このプロセスがリアルタイムで行われることで、音楽とビジュアルがシンクロしたパフォーマンスが生まれます。</p>
+    <p>あなたは音楽に合わせて動くピクセルです。音のビートやメロディに応じて動くように、指揮官から指示を受け取っています。指示には色の変化や形の変形が含まれており、あなたはそれに従って自分の色を更新します。このプロセスがリアルタイムで行われることで、音楽とビジュアルがシンクロしたパフォーマンスが生まれます。</p>
     
-    <div class="controls">
+    <div class="code-block">
+        <pre><code class="language-glsl">
+uniform vec3 iResolution;
+uniform float iTime;
+
+//回転させる
+mat2 rot(float a){return mat2(cos(a) , sin(a) ,-sin(a) , cos(a));}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 uv = fragCoord / iResolution.xy;
+    //0,0を真ん中らへんに
+    uv = uv - 0.5;
+    //疑似的に解像度を落とす
+    uv = floor(uv * 100.) / 100. ;
+
+    //uvを回転させる　さらに中心からの距離におうじてちょっとずらす
+    uv *= rot(iTime + length(uv) * 3. );
+    // VJ向けの動的なビジュアル例
+    vec3 color = 0.5 + 0.5 * sin(iTime * sin(uv.xyx * 10.0 ) + vec3(0, 2, 4));
+    //赤色が0.5より大きいなら色全部に0をかける
+    color.rgb *= step(color.r , 0.5);
+    if(showCoordinates){
+        color = vec3(uv, 0.5 + 0.5 * sin(iTime));
+    }
+    
+    fragColor = vec4(color, 1.0);
+}
+
+void main() {
+    mainImage(gl_FragColor, gl_FragCoord.xy);
+}
+        </code></pre>
+    </div>
+
+    
+    <!-- <div class="controls">
         <label for="resolution-vj">解像度 (n):</label>
         <input type="range" id="resolution-vj" min="1" max="10" step="1" value="1">
         
@@ -20,9 +55,9 @@
             <input type="checkbox" id="show-coordinates-vj">
             座標表示
         </label>
-    </div>
+    </div> -->
     
-    <button class="button" onclick="showDemo('vj', 'shader-demo-vj')">VJデモを見る</button>
+    <button class="button" onclick="showDemo('vj', 'shader-demo-vj')">VJっぽいデモを見る</button>
     <div id="shader-demo-vj" class="shader-demo">
         <!-- エディターとエラーメッセージの削除 -->
         <!--

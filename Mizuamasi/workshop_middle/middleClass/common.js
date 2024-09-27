@@ -310,11 +310,20 @@ uniform vec3 iResolution;
 uniform float iTime;
 uniform bool showCoordinates;
 
+//回転させる
+mat2 rot(float a){return mat2(cos(a) , sin(a) ,-sin(a) , cos(a));}
+
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 uv = fragCoord / iResolution.xy;
+    //0,0を真ん中らへんに
+    uv = uv - 0.5;
+    uv = floor(uv * 100.) / 100. ;
+    //uvを回転させる　さらに中心からの距離におうじてちょっとずらす
+    uv *= rot(iTime + length(uv) * 3. );
     // VJ向けの動的なビジュアル例
-    vec3 color = 0.5 + 0.5 * sin(iTime + uv.xyx * 10.0 + vec3(0, 2, 4));
-    
+    vec3 color = 0.5 + 0.5 * sin(iTime * sin(uv.xyx * 10.0 ) + vec3(0, 2, 4));
+    //赤色が0.5より大きいなら色全部に0をかける
+    color.rgb *= step(color.r , 0.5);
     if(showCoordinates){
         color = vec3(uv, 0.5 + 0.5 * sin(iTime));
     }

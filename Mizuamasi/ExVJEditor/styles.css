@@ -123,15 +123,35 @@ body {
 
 #toolbar .toolbar-right {
   margin-left: auto;
+  display: flex;
+  align-items: center;
 }
 
-#toolbar select {
+#toolbar select,
+#toolbar input[type="number"] {
   background-color: #333;
   color: #fff;
   border: none;
   margin-right: 10px;
   padding: 5px;
   border-radius: 4px;
+}
+
+#toolbar input[type="number"] {
+  width: 80px;
+}
+
+#set-resolution-btn {
+  background-color: #28a745;
+  color: #fff;
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#set-resolution-btn:hover {
+  background-color: #218838;
 }
 
 /* メインコンテナのスタイル */
@@ -141,26 +161,15 @@ body {
   height: 100vh;
   overflow: hidden;
   display: flex;
+  flex-direction: column;
 }
 
-/* レンダリングキャンバスを背景に配置 */
-#render-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-/* エディターをオーバーレイで表示 */
+/* エディターコンテナを上半分に配置 */
 #editor-container {
-  position: absolute;
-  top: 40px; /* ツールバーの高さ */
-  left: 0;
+  position: relative;
   width: 100%;
-  height: calc(100% - 40px);
-  background-color: rgba(0, 0, 0, 0.5); /* 半透明 */
+  height: 50%;
+  background-color: rgba(0, 0, 0, 0.8); /* 半透明 */
   z-index: 2;
   overflow: auto;
 }
@@ -169,13 +178,21 @@ body {
   display: none;
 }
 
-/* コンソールコンテナ */
+/* レンダリングキャンバスを下半分に配置 */
+#render-canvas {
+  position: relative;
+  width: 100%;
+  height: 50%;
+  z-index: 1;
+}
+
+/* コンソールコンテナを下部に固定 */
 #console-container {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  max-height: 200px;
+  max-height: 100px;
   background-color: rgba(0, 0, 0, 0.7);
   overflow-y: auto;
   z-index: 3;
@@ -186,8 +203,6 @@ body {
   font-family: monospace;
   padding: 10px;
 }
-
-/* ユニフォームコントロールは削除 */
 
 /* ロードモーダルのスタイル */
 .modal {
@@ -274,12 +289,18 @@ body {
     flex-wrap: wrap;
   }
 
-  #toolbar select {
+  #toolbar select,
+  #toolbar input[type="number"] {
     margin-bottom: 5px;
+    margin-right: 0;
   }
 
   #editor-container {
-    height: calc(100% - 100px); /* ツールバーの高さ調整 */
+    height: 60%; /* ツールバーの高さ調整 */
+  }
+
+  #render-canvas {
+    height: 40%;
   }
 
   #console-container {
