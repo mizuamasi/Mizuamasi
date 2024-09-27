@@ -62,7 +62,7 @@ window.onload = function() {
 function initializeEditor() {
   editor = CodeMirror.fromTextArea(document.getElementById('shader-code'), {
     mode: 'x-shader/x-fragment',
-    //theme: 'dracula',
+    theme: 'dracula',
     lineNumbers: true,
     matchBrackets: true,
     autofocus: true
@@ -221,7 +221,7 @@ function createProgram(vs, fs) {
  * ポップアップへのレンダリング結果送信を最適化
  */
 let lastPopupUpdate = 0;
-const popupUpdateInterval = 1000; // 1秒ごとに送信
+const popupUpdateInterval = 0; // 1秒ごとに送信
 
 function render() {
   if (!program) return;
@@ -658,7 +658,7 @@ function openPopup() {
       <title>ポップアップレンダリング結果</title>
       <style>
         body { margin: 0; background-color: #000; }
-        img { width: 100%; height: 100%; object-fit: contain; }
+        img { width: 100%; height: 100vh; object-fit: contain; }
       </style>
     </head>
     <body>

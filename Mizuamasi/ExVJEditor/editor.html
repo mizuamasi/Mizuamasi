@@ -18,12 +18,12 @@
   <div id="toolbar" class="hidden">
     <!-- トラッキング状態表示 -->
     <span id="tracking-status" title="使用状況">
-      <i class="fas fa-eye-slash"></i> トラッキング: OFF
+      <i class="fas fa-eye-slash"></i> OFF
     </span>
     
     <!-- マイク状態表示 -->
     <span id="mic-status" title="マイク状態">
-      <i class="fas fa-microphone-slash"></i> マイク: OFF
+      <i class="fas fa-microphone-slash"></i> OFF
     </span>
     
     <!-- マイクのオン/オフボタン -->
@@ -32,9 +32,9 @@
     </button>
     
     <!-- エディターの表示/非表示ボタン -->
-    <button id="toggle-editor-btn" title="エディターの表示/非表示">
+    <!-- <button id="toggle-editor-btn" title="エディターの表示/非表示">
       <i class="fas fa-code"></i>
-    </button>
+    </button> -->
     
     <!-- コード保存ボタン -->
     <!-- <button id="save-btn" title="コードを保存">
@@ -53,13 +53,13 @@
     
     <!-- 右側にサンプル選択とマイク選択、解像度設定を配置 -->
     <div class="toolbar-right">
-      <select id="sample-select" title="サンプルシェーダーを選択">
+      <!-- <select id="sample-select" title="サンプルシェーダーを選択">
         <option value="">サンプルを選択</option>
         <option value="SampleCode/sample1.frag">Sample 1</option>
         <option value="SampleCode/sample2.frag">Sample 2</option>
         <option value="SampleCode/sample3.frag">マイクスペクトラム</option>
         <option value="SampleCode/sample4.frag">マイク波形</option>
-      </select>
+      </select> -->
       <select id="microphone-select" title="マイクを選択">
         <option value="">マイクを選択</option>
       </select>
@@ -78,13 +78,13 @@
       <textarea id="shader-code"></textarea>
     </div>
     
-    <!-- レンダリングキャンバス -->
-    <canvas id="render-canvas"></canvas>
     <!-- コンソールコンテナ -->
     <div id="console-container">
       <div id="console-output"></div>
     </div>
     
+    <!-- レンダリングキャンバス -->
+    <canvas id="render-canvas"></canvas>
     <!-- ロードモーダル -->
     <div id="load-modal" class="modal hidden">
       <div class="modal-content">
