@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Shader Editor Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .shader-editor-container {
+            width: 800px;
+            height: 400px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="editor1" class="shader-editor-container"></div>
+
+    <script type="module">
+        // Three.jsとShaderEditor.jsをESモジュールとしてインポート
+        import * as THREE from 'https://unpkg.com/three@0.152.0/build/three.module.js';
+        import { ShaderEditor } from './ShaderEditor.js';
+
+        const initialCode = `
+uniform float u_time;
+uniform vec2 u_resolution;
+void main() {
+    vec2 st = gl_FragCoord.xy / u_resolution;
+    gl_FragColor = vec4(st.x, st.y, 0.0, 1.0);
+}
+`;
+
+        const shaderEditor = new ShaderEditor({
+            container: document.getElementById('editor1'),
+            width: 800,
+            height: 400,
+            initialCode: initialCode,
+        });
+    </script>
+</body>
+</html>
