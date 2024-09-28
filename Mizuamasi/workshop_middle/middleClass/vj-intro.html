@@ -33,9 +33,6 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec3 color = 0.5 + 0.5 * sin(iTime * sin(uv.xyx * 10.0 ) + vec3(0, 2, 4));
     //赤色が0.5より大きいなら色全部に0をかける
     color.rgb *= step(color.r , 0.5);
-    if(showCoordinates){
-        color = vec3(uv, 0.5 + 0.5 * sin(iTime));
-    }
     
     fragColor = vec4(color, 1.0);
 }
